@@ -12,7 +12,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
-// import newsRoutes from "./routes/newsRoutes";
+const newsRoutes_1 = __importDefault(require("./routes/newsRoutes"));
 // import initiativeRoutes from "./routes/initiativeRoutes";
 const ventureRoutes_1 = __importDefault(require("./routes/ventureRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
@@ -81,7 +81,22 @@ const createLimiter = (windowMs, max, message) => (0, express_rate_limit_1.defau
     },
 });
 // General API rate limiting
-app.use("/api", createLimiter(15 * 60 * 1000, 100, "Too many requests from this IP"));
+// app.use(
+//   "/api",
+//   // createLimiter(15 * 60 * 1000, 100, "Too many requests from this IP")
+//   createLimiter(60 * 60 * 1000, 100, "Too many requests from this IP")
+// );
+// * limiter timings -
+// Limiter A: 15 minutes
+// 15 * 60 * 1000 = 900000 ms (15 minutes)
+// const limiterA = createLimiter(15 * 60 * 1000, 100, "Too many requests from this IP");
+// Limiter B: 1 hour
+// 60 * 60 * 1000 = 3600000 ms (1 hour)
+// const limiterB = createLimiter(60 * 60 * 1000, 500, "Too many requests from this IP");
+// Limiter C: 1 day
+// 24 * 60 * 60 * 1000 = 86400000 ms (24 hours / 1 day)
+// const limiterC = createLimiter(24 * 60 * 60 * 1000, 2000, "Too many requests from this IP");
+// * limiter timings |
 // Stricter rate limiting for auth endpoints
 // app.use(
 //   "/api/admin/login",
@@ -91,7 +106,7 @@ app.use("/api", createLimiter(15 * 60 * 1000, 100, "Too many requests from this 
 app.use("/api/*/upload", createLimiter(60 * 1000, 10, "Too many file uploads"));
 // Body parsing middleware
 app.use(express_1.default.json({
-    limit: "10mb",
+    limit: "20mb",
     verify: (req, res, buf, encoding) => {
         try {
             JSON.parse(buf.toString());
@@ -114,7 +129,7 @@ app.use("/uploads", express_1.default.static(path_1.default.join(__dirname, "../
 }));
 // API Routes
 app.use("/api/admin", adminRoutes_1.default);
-// app.use("/api/news", newsRoutes);
+app.use("/api/news", newsRoutes_1.default);
 // app.use("/api/initiatives", initiativeRoutes);
 app.use("/api/ventures", ventureRoutes_1.default);
 app.use("/api/media", uploadRoutes_1.default);

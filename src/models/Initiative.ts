@@ -7,13 +7,11 @@ const detailedSectionSchema = new Schema(
   {
     title: {
       type: String,
-      required: true,
       trim: true,
     },
     content: [
       {
         type: String,
-        required: true,
       },
     ],
   },
@@ -24,37 +22,31 @@ const initiativeSchema = new Schema<InitiativeDocument>(
   {
     title: {
       type: String,
-      required: true,
       trim: true,
       maxlength: 200,
+      required: true,
     },
     excerpt: {
       type: String,
-      required: true,
       trim: true,
-      maxlength: 500,
+      // maxlength: 500,
     },
     image: {
       type: String,
-      required: true,
     },
     heroImage: {
       type: String,
-      required: true,
     },
     author: {
       type: String,
-      required: true,
       trim: true,
     },
     date: {
       type: Date,
-      required: true,
       default: Date.now,
     },
     category: {
       type: String,
-      required: true,
       trim: true,
     },
     status: {
@@ -64,7 +56,6 @@ const initiativeSchema = new Schema<InitiativeDocument>(
     },
     impact: {
       type: String,
-      required: true,
       trim: true,
     },
     tags: [

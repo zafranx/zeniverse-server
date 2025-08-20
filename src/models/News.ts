@@ -23,13 +23,11 @@ const detailedSectionSchema = new Schema(
   {
     title: {
       type: String,
-      required: true,
       trim: true,
     },
     content: [
       {
         type: String,
-        required: true,
       },
     ],
   },
@@ -49,23 +47,20 @@ const newsSchema = new Schema<NewsDocument>(
       required: true,
       trim: true,
       maxlength: 500,
-    },
+    }, // a short description of the news
+
     image: {
       type: String,
-      required: true,
     },
     heroImage: {
       type: String,
-      required: true,
     },
     author: {
       type: String,
-      required: true,
       trim: true,
     },
     date: {
       type: Date,
-      required: true,
       default: Date.now,
     },
     category: {
@@ -75,7 +70,6 @@ const newsSchema = new Schema<NewsDocument>(
     },
     readTime: {
       type: String,
-      required: true,
     },
     tags: [
       {

@@ -15,8 +15,8 @@ import { __uploadNewsMedia } from "../utils/multer";
 
 const router = Router();
 
-router.use(authenticateToken); // All routes require authentication
-router.use(requireAdminOrSuperAdmin); // All routes require admin access
+// router.use(authenticateToken); // All routes require authentication
+// router.use(requireAdminOrSuperAdmin); // All routes require admin access
 
 router.get("/", getAllNews);
 router.get("/:id", getNewsById);

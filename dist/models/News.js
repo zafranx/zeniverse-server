@@ -37,13 +37,11 @@ const mongoose_1 = __importStar(require("mongoose"));
 const detailedSectionSchema = new mongoose_1.Schema({
     title: {
         type: String,
-        required: true,
         trim: true,
     },
     content: [
         {
             type: String,
-            required: true,
         },
     ],
 }, { _id: false });
@@ -59,23 +57,19 @@ const newsSchema = new mongoose_1.Schema({
         required: true,
         trim: true,
         maxlength: 500,
-    },
+    }, // a short description of the news
     image: {
         type: String,
-        required: true,
     },
     heroImage: {
         type: String,
-        required: true,
     },
     author: {
         type: String,
-        required: true,
         trim: true,
     },
     date: {
         type: Date,
-        required: true,
         default: Date.now,
     },
     category: {
@@ -85,7 +79,6 @@ const newsSchema = new mongoose_1.Schema({
     },
     readTime: {
         type: String,
-        required: true,
     },
     tags: [
         {

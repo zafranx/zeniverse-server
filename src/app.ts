@@ -8,11 +8,10 @@ import path from "path";
 import fs from "fs";
 
 import adminRoutes from "./routes/adminRoutes";
-// import newsRoutes from "./routes/newsRoutes";
+import newsRoutes from "./routes/newsRoutes";
 // import initiativeRoutes from "./routes/initiativeRoutes";
 import portfolioVentureRoutes from "./routes/ventureRoutes";
 import uploadRoute from "./routes/uploadRoutes";
-
 
 import { errorHandler } from "./middleware/errorHandler";
 import { __requestResponse, RESPONSE_CODES } from "./utils/constants";
@@ -77,7 +76,7 @@ app.use(
 //   })
 // );
 
-app.use(cors())
+app.use(cors());
 
 // Rate limiting with different tiers
 const createLimiter = (windowMs: number, max: number, message: string) =>
@@ -93,10 +92,24 @@ const createLimiter = (windowMs: number, max: number, message: string) =>
   });
 
 // General API rate limiting
-app.use(
-  "/api",
-  createLimiter(15 * 60 * 1000, 100, "Too many requests from this IP")
-);
+// app.use(
+//   "/api",
+//   // createLimiter(15 * 60 * 1000, 100, "Too many requests from this IP")
+//   createLimiter(60 * 60 * 1000, 100, "Too many requests from this IP")
+// );
+// * limiter timings -
+// Limiter A: 15 minutes
+// 15 * 60 * 1000 = 900000 ms (15 minutes)
+// const limiterA = createLimiter(15 * 60 * 1000, 100, "Too many requests from this IP");
+
+// Limiter B: 1 hour
+// 60 * 60 * 1000 = 3600000 ms (1 hour)
+// const limiterB = createLimiter(60 * 60 * 1000, 500, "Too many requests from this IP");
+
+// Limiter C: 1 day
+// 24 * 60 * 60 * 1000 = 86400000 ms (24 hours / 1 day)
+// const limiterC = createLimiter(24 * 60 * 60 * 1000, 2000, "Too many requests from this IP");
+// * limiter timings |
 
 // Stricter rate limiting for auth endpoints
 // app.use(
@@ -110,7 +123,7 @@ app.use("/api/*/upload", createLimiter(60 * 1000, 10, "Too many file uploads"));
 // Body parsing middleware
 app.use(
   express.json({
-    limit: "10mb",
+    limit: "20mb",
     verify: (req, res, buf, encoding) => {
       try {
         JSON.parse(buf.toString());
@@ -141,7 +154,7 @@ app.use(
 
 // API Routes
 app.use("/api/admin", adminRoutes);
-// app.use("/api/news", newsRoutes);
+app.use("/api/news", newsRoutes);
 // app.use("/api/initiatives", initiativeRoutes);
 app.use("/api/ventures", portfolioVentureRoutes);
 app.use("/api/media", uploadRoute);
