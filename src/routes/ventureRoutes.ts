@@ -19,9 +19,20 @@ const router = Router();
 
 router.get("/", getAllVentures);
 router.get("/:id", getVentureById);
-
-router.post("/", __uploadVentureMedia, createVenture);
-router.put("/:id", __uploadVentureMedia, updateVenture);
+router.post(
+  "/",
+  __uploadVentureMedia,
+  createVenture,
+  authenticateToken,
+  requireAdminOrSuperAdmin
+);
+router.put(
+  "/:id",
+  __uploadVentureMedia,
+  updateVenture,
+  authenticateToken,
+  requireAdminOrSuperAdmin
+);
 
 router.delete("/:id", deleteVenture);
 

@@ -20,10 +20,27 @@ const router = Router();
 
 router.get("/", getAllNews);
 router.get("/:id", getNewsById);
-router.post("/", __uploadNewsMedia, createNews);
-router.put("/:id", __uploadNewsMedia, updateNews);
-router.patch("/:id/featured", toggleFeatured);
-router.delete("/:id", deleteNews);
+router.post(
+  "/",
+  __uploadNewsMedia,
+  createNews,
+  authenticateToken,
+  requireAdminOrSuperAdmin
+);
+router.put(
+  "/:id",
+  __uploadNewsMedia,
+  updateNews,
+  authenticateToken,
+  requireAdminOrSuperAdmin
+);
+router.patch(
+  "/:id/featured",
+  toggleFeatured,
+  authenticateToken,
+  requireAdminOrSuperAdmin
+);
+router.delete("/:id", deleteNews, authenticateToken, requireAdminOrSuperAdmin);
 
 export default router;
 

@@ -2,13 +2,17 @@
 import { Router } from "express";
 import { __uploadMedia } from "../utils/multer";
 import { uploadFiles } from "../controllers/uploadController";
-import { authenticateToken } from "../middleware/auth";
+import {
+  authenticateToken,
+  requireAdminOrSuperAdmin,
+} from "../middleware/auth";
 
 const router = Router();
 
 router.post(
   "/upload",
-//    authenticateToken,
+  authenticateToken,
+  requireAdminOrSuperAdmin,
   __uploadMedia,
   uploadFiles
 );

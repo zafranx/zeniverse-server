@@ -9,7 +9,7 @@ import fs from "fs";
 
 import adminRoutes from "./routes/adminRoutes";
 import newsRoutes from "./routes/newsRoutes";
-// import initiativeRoutes from "./routes/initiativeRoutes";
+import initiativeRoutes from "./routes/initiativeRoutes";
 import portfolioVentureRoutes from "./routes/ventureRoutes";
 import uploadRoute from "./routes/uploadRoutes";
 
@@ -155,7 +155,7 @@ app.use(
 // API Routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/news", newsRoutes);
-// app.use("/api/initiatives", initiativeRoutes);
+app.use("/api/initiatives", initiativeRoutes);
 app.use("/api/ventures", portfolioVentureRoutes);
 app.use("/api/media", uploadRoute);
 
