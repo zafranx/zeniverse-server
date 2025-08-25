@@ -112,7 +112,7 @@ export const getInitiativeById = async (
     console.error("Get initiative by ID error:", error);
 
     // Handle invalid ObjectId error
-    if (error.name === "CastError") {
+    if ((error as { name: string }).name === "CastError") {
       res
         .status(RESPONSE_CODES.BAD_REQUEST)
         .json(
@@ -162,7 +162,7 @@ export const createInitiative = async (
         initiativeData.image = `/uploads/${files.image[0].filename}`;
       }
       if (files.heroImage) {
-        initiativeData.heroImage = `/uploads/${files.heroImage.filename}`;
+        initiativeData.heroImage = `/uploads/${files.heroImage[0].filename}`;
       }
     }
 
@@ -182,8 +182,8 @@ export const createInitiative = async (
     console.error("Create initiative error:", error);
 
     // Handle validation errors
-    if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map(
+    if ((error as { name: string }).name === "ValidationError") {
+      const validationErrors = Object.values(error as { errors: any }).map(
         (err: any) => err.message
       );
       res
@@ -198,7 +198,7 @@ export const createInitiative = async (
     }
 
     // Handle duplicate key error
-    if (error.code === 11000) {
+    if ((error as { code: number }).code === 11000) {
       res
         .status(RESPONSE_CODES.CONFLICT)
         .json(
@@ -257,7 +257,7 @@ export const updateInitiative = async (
         initiativeData.image = `/uploads/${files.image[0].filename}`;
       }
       if (files.heroImage) {
-        initiativeData.heroImage = `/uploads/${files.heroImage.filename}`;
+        initiativeData.heroImage = `/uploads/${files.heroImage[0].filename}`;
       }
     }
 
@@ -289,7 +289,7 @@ export const updateInitiative = async (
     console.error("Update initiative error:", error);
 
     // Handle invalid ObjectId error
-    if (error.name === "CastError") {
+    if ((error as { name: string }).name === "CastError") {
       res
         .status(RESPONSE_CODES.BAD_REQUEST)
         .json(
@@ -302,8 +302,8 @@ export const updateInitiative = async (
     }
 
     // Handle validation errors
-    if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map(
+    if ((error as { name: string }).name === "ValidationError") {
+      const validationErrors = Object.values(error as { errors: any }).map(
         (err: any) => err.message
       );
       res
@@ -318,7 +318,7 @@ export const updateInitiative = async (
     }
 
     // Handle duplicate key error
-    if (error.code === 11000) {
+    if ((error as { code: number }).code === 11000) {
       res
         .status(RESPONSE_CODES.CONFLICT)
         .json(
@@ -373,7 +373,7 @@ export const deleteInitiative = async (
     console.error("Delete initiative error:", error);
 
     // Handle invalid ObjectId error
-    if (error.name === "CastError") {
+    if ((error as { name: string }).name === "CastError") {
       res
         .status(RESPONSE_CODES.BAD_REQUEST)
         .json(

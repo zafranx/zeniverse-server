@@ -5,4 +5,7 @@ export declare const getInitiativeById: (req: AuthRequest, res: Response) => Pro
 export declare const createInitiative: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const updateInitiative: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const deleteInitiative: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getFeaturedInitiatives: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getInitiativesByStatus: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getInitiativeStats: (req: AuthRequest, res: Response) => Promise<void>;
 //# sourceMappingURL=initiativeController.d.ts.map

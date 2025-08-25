@@ -34,12 +34,7 @@ router.put(
   authenticateToken,
   requireAdminOrSuperAdmin
 );
-router.patch(
-  "/:id/featured",
-  toggleFeatured,
-  authenticateToken,
-  requireAdminOrSuperAdmin
-);
+router.patch("/:id/featured", toggleFeatured);
 router.delete("/:id", deleteNews, authenticateToken, requireAdminOrSuperAdmin);
 
 export default router;

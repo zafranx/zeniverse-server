@@ -13,7 +13,7 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const newsRoutes_1 = __importDefault(require("./routes/newsRoutes"));
-// import initiativeRoutes from "./routes/initiativeRoutes";
+const initiativeRoutes_1 = __importDefault(require("./routes/initiativeRoutes"));
 const ventureRoutes_1 = __importDefault(require("./routes/ventureRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const errorHandler_1 = require("./middleware/errorHandler");
@@ -130,7 +130,7 @@ app.use("/uploads", express_1.default.static(path_1.default.join(__dirname, "../
 // API Routes
 app.use("/api/admin", adminRoutes_1.default);
 app.use("/api/news", newsRoutes_1.default);
-// app.use("/api/initiatives", initiativeRoutes);
+app.use("/api/initiatives", initiativeRoutes_1.default);
 app.use("/api/ventures", ventureRoutes_1.default);
 app.use("/api/media", uploadRoutes_1.default);
 // Health check with more details

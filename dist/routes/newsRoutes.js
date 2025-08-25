@@ -2,16 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const newsController_1 = require("../controllers/newsController");
+const auth_1 = require("../middleware/auth");
 const multer_1 = require("../utils/multer");
 const router = (0, express_1.Router)();
 // router.use(authenticateToken); // All routes require authentication
 // router.use(requireAdminOrSuperAdmin); // All routes require admin access
 router.get("/", newsController_1.getAllNews);
 router.get("/:id", newsController_1.getNewsById);
-router.post("/", multer_1.__uploadNewsMedia, newsController_1.createNews);
-router.put("/:id", multer_1.__uploadNewsMedia, newsController_1.updateNews);
+router.post("/", multer_1.__uploadNewsMedia, newsController_1.createNews, auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin);
+router.put("/:id", multer_1.__uploadNewsMedia, newsController_1.updateNews, auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin);
 router.patch("/:id/featured", newsController_1.toggleFeatured);
-router.delete("/:id", newsController_1.deleteNews);
+router.delete("/:id", newsController_1.deleteNews, auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin);
 exports.default = router;
 // import { Router } from "express";
 // import {
