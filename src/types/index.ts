@@ -74,3 +74,16 @@ export interface AuthRequest extends Express.Request {
     role: string;
   };
 }
+
+
+export interface TeamMember {
+  _id?: Types.ObjectId;
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+  sort_order?: number;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

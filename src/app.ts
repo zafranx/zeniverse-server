@@ -12,6 +12,7 @@ import newsRoutes from "./routes/newsRoutes";
 import initiativeRoutes from "./routes/initiativeRoutes";
 import portfolioVentureRoutes from "./routes/ventureRoutes";
 import uploadRoute from "./routes/uploadRoutes";
+import teamMemberRoutes from "./routes/teamMemberRoutes";
 
 import { errorHandler } from "./middleware/errorHandler";
 import { __requestResponse, RESPONSE_CODES } from "./utils/constants";
@@ -158,7 +159,7 @@ app.use("/api/news", newsRoutes);
 app.use("/api/initiatives", initiativeRoutes);
 app.use("/api/ventures", portfolioVentureRoutes);
 app.use("/api/media", uploadRoute);
-
+app.use("/api/team-members", teamMemberRoutes);
 
 // Health check with more details
 app.get("/api/health", (req, res) => {
