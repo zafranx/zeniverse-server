@@ -138,28 +138,28 @@ export const getTeamMemberById = async (req: AuthRequest, res: Response) => {
 // Create team member
 export const createTeamMember = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, role, description, sort_order, isActive, imageUrl } = req.body;
-    
+    const { name, role, description, sort_order, isActive, imageUrl } =
+      req.body;
+
     // Handle image - either from file upload or Cloudinary URL
     let imageToSave = null;
-    
+
     // Check for Cloudinary URL first (since you always use Cloudinary)
-    if (imageUrl && typeof imageUrl === 'string') {
+    if (imageUrl && typeof imageUrl === "string") {
       imageToSave = imageUrl;
     } else {
       // Fallback to file upload if no URL provided
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const processedFiles = processUploadedFiles(files);
+      const processedFiles = await processUploadedFiles(req, files);
       imageToSave = processedFiles.image;
     }
-    
+
     if (!imageToSave) {
-      return res.status(RESPONSE_CODES.BAD_REQUEST).json(
-        __requestResponse(
-          RESPONSE_CODES.BAD_REQUEST,
-          "Image is required"
-        )
-      );
+      return res
+        .status(RESPONSE_CODES.BAD_REQUEST)
+        .json(
+          __requestResponse(RESPONSE_CODES.BAD_REQUEST, "Image is required")
+        );
     }
 
     const newTeamMember = new TeamMember({
@@ -168,26 +168,30 @@ export const createTeamMember = async (req: AuthRequest, res: Response) => {
       description,
       image: imageToSave,
       sort_order: sort_order || 0,
-      isActive: isActive !== undefined ? isActive : true
+      isActive: isActive !== undefined ? isActive : true,
     });
 
     await newTeamMember.save();
 
-    res.status(RESPONSE_CODES.CREATED).json(
-      __requestResponse(
-        RESPONSE_CODES.CREATED,
-        RESPONSE_MESSAGES.CREATED,
-        newTeamMember
-      )
-    );
+    res
+      .status(RESPONSE_CODES.CREATED)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.CREATED,
+          RESPONSE_MESSAGES.CREATED,
+          newTeamMember
+        )
+      );
   } catch (error) {
     console.error("Create team member error:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(
-        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-        RESPONSE_MESSAGES.INTERNAL_ERROR
-      )
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
   }
 };
 
@@ -195,39 +199,41 @@ export const createTeamMember = async (req: AuthRequest, res: Response) => {
 export const updateTeamMember = async (req: AuthRequest, res: Response) => {
   try {
     const { name, role, description, sort_order, isActive } = req.body;
-    
+
     const teamMember = await TeamMember.findById(req.params.id);
-    
+
     if (!teamMember) {
-      return res.status(RESPONSE_CODES.NOT_FOUND).json(
-        __requestResponse(
-          RESPONSE_CODES.NOT_FOUND,
-          RESPONSE_MESSAGES.NOT_FOUND
-        )
-      );
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND
+          )
+        );
     }
 
     // Process uploaded image if provided
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    const processedFiles = processUploadedFiles(files);
-    
+    const processedFiles = await processUploadedFiles(req, files);
+
     // Update fields
     teamMember.name = name || teamMember.name;
     teamMember.role = role || teamMember.role;
     teamMember.description = description || teamMember.description;
-    
+
     if (sort_order !== undefined) {
       teamMember.sort_order = sort_order;
     }
-    
+
     if (isActive !== undefined) {
       teamMember.isActive = isActive;
     }
-    
+
     // Update image if provided
     if (processedFiles.image) {
       // Delete old image if it's a Cloudinary URL
-      if (teamMember.image && teamMember.image.includes('cloudinary')) {
+      if (teamMember.image && teamMember.image.includes("cloudinary")) {
         const publicId = __extractCloudinaryPublicId(teamMember.image);
         if (publicId) {
           await __deleteCloudinaryFile(publicId);
@@ -236,27 +242,31 @@ export const updateTeamMember = async (req: AuthRequest, res: Response) => {
         // Delete local file
         await __deleteFile(teamMember.image);
       }
-      
+
       teamMember.image = processedFiles.image;
     }
 
     await teamMember.save();
 
-    res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(
-        RESPONSE_CODES.SUCCESS,
-        RESPONSE_MESSAGES.UPDATED,
-        teamMember
-      )
-    );
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          RESPONSE_MESSAGES.UPDATED,
+          teamMember
+        )
+      );
   } catch (error) {
     console.error("Update team member error:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(
-        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-        RESPONSE_MESSAGES.INTERNAL_ERROR
-      )
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
   }
 };
 
