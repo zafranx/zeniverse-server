@@ -193,10 +193,7 @@ export const getDashboard = async (
   }
 };
 
-export const getProfile = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
+export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const admin = await Admin.findById(req.user?.id).select("-password").lean();
     if (!admin) {
@@ -206,13 +203,11 @@ export const getProfile = async (
       return;
     }
 
-    res
-      .status(RESPONSE_CODES.SUCCESS)
-      .json(
-        __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.SUCCESS, {
-          admin,
-        })
-      );
+    res.status(RESPONSE_CODES.SUCCESS).json(
+      __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.SUCCESS, {
+        admin,
+      })
+    );
   } catch (error) {
     console.error("Get profile error:", error);
     res
@@ -226,10 +221,7 @@ export const getProfile = async (
   }
 };
 
-export const updateProfile = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
+export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, currentPassword, newPassword } = req.body;
     const adminId = req.user?.id;
@@ -323,147 +315,3 @@ export const logout = async (
     .status(RESPONSE_CODES.SUCCESS)
     .json(__requestResponse(RESPONSE_CODES.SUCCESS, "Logout successful"));
 };
-
-// import { Request, Response } from "express";
-// import jwt from "jsonwebtoken";
-// import Admin from "../models/Admin";
-// import News from "../models/News";
-// import Initiative from "../models/Initiative";
-// import PortfolioCompany from "../models/PortfolioCompany";
-// import { AuthRequest } from "../types";
-
-// export const login = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { username, password } = req.body;
-
-//     // Find admin
-//     const admin = await Admin.findOne({ username, isActive: true });
-//     if (!admin) {
-//       res.status(401).json({ message: "Invalid credentials" });
-//       return;
-//     }
-
-//     // Check password
-//     const isValidPassword = await admin.comparePassword(password);
-//     if (!isValidPassword) {
-//       res.status(401).json({ message: "Invalid credentials" });
-//       return;
-//     }
-
-//     // Update last login
-//     admin.lastLogin = new Date();
-//     await admin.save();
-
-//     // Generate token
-//     const token = jwt.sign(
-//       { id: admin._id, username: admin.username, role: admin.role },
-//       process.env.JWT_SECRET || "your-secret-key",
-//       { expiresIn: "24h" }
-//     );
-
-//     res.json({
-//       message: "Login successful",
-//       token,
-//       admin: {
-//         id: admin._id,
-//         username: admin.username,
-//         name: admin.name,
-//         email: admin.email,
-//         role: admin.role,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Login error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-// export const getDashboard = async (
-//   req: AuthRequest,
-//   res: Response
-// ): Promise<void> => {
-//   try {
-//     // Get counts
-//     const [newsCount, initiativeCount, portfolioCount, adminCount] =
-//       await Promise.all([
-//         News.countDocuments(),
-//         Initiative.countDocuments(),
-//         PortfolioCompany.countDocuments(),
-//         Admin.countDocuments({ isActive: true }),
-//       ]);
-
-//     // Get featured counts
-//     const [featuredNews, featuredInitiatives] = await Promise.all([
-//       News.countDocuments({ featured: true }),
-//       Initiative.countDocuments({ featured: true }),
-//     ]);
-
-//     // Get recent activities
-//     const [recentNews, recentInitiatives, recentPortfolio] = await Promise.all([
-//       News.find().sort({ createdAt: -1 }).limit(5).select("title createdAt"),
-//       Initiative.find()
-//         .sort({ createdAt: -1 })
-//         .limit(5)
-//         .select("title createdAt"),
-//       PortfolioCompany.find()
-//         .sort({ createdAt: -1 })
-//         .limit(5)
-//         .select("name createdAt"),
-//     ]);
-
-//     res.json({
-//       counts: {
-//         news: newsCount,
-//         initiatives: initiativeCount,
-//         portfolio: portfolioCount,
-//         admins: adminCount,
-//         featuredNews,
-//         featuredInitiatives,
-//       },
-//       recentActivities: {
-//         news: recentNews,
-//         initiatives: recentInitiatives,
-//         portfolio: recentPortfolio,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Dashboard error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-// export const getProfile = async (
-//   req: AuthRequest,
-//   res: Response
-// ): Promise<void> => {
-//   try {
-//     const admin = await Admin.findById(req.user?.id).select("-password");
-//     if (!admin) {
-//       res.status(404).json({ message: "Admin not found" });
-//       return;
-//     }
-
-//     res.json({
-//       admin: {
-//         id: admin._id,
-//         username: admin.username,
-//         name: admin.name,
-//         email: admin.email,
-//         role: admin.role,
-//         lastLogin: admin.lastLogin,
-//         createdAt: admin.createdAt,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Get profile error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-// export const logout = async (
-//   req: AuthRequest,
-//   res: Response
-// ): Promise<void> => {
-//   // In a real application, you might want to blacklist the token
-//   res.json({ message: "Logout successful" });
-// };

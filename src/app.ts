@@ -13,6 +13,8 @@ import initiativeRoutes from "./routes/initiativeRoutes";
 import portfolioVentureRoutes from "./routes/ventureRoutes";
 import uploadRoute from "./routes/uploadRoutes";
 import teamMemberRoutes from "./routes/teamMemberRoutes";
+import contentRoutes from "./routes/contentManagementRoutes";
+import enquiryRoutes from "./routes/contactInquiryRoutes";
 
 import { errorHandler } from "./middleware/errorHandler";
 import { __requestResponse, RESPONSE_CODES } from "./utils/constants";
@@ -160,6 +162,8 @@ app.use("/api/initiatives", initiativeRoutes);
 app.use("/api/ventures", portfolioVentureRoutes);
 app.use("/api/media", uploadRoute);
 app.use("/api/team-members", teamMemberRoutes);
+app.use("/api/content-management", contentRoutes);
+app.use("/api/contact-inquiries", enquiryRoutes);
 
 // Health check with more details
 app.get("/api/health", (req, res) => {
@@ -207,6 +211,32 @@ app.get("/api/docs", (req, res) => {
           get: "GET /api/portfolio-ventures/:id",
           update: "PUT /api/portfolio-ventures/:id",
           delete: "DELETE /api/portfolio-ventures/:id",
+        },
+        teamMembers: {
+          list: "GET /api/team-members/admin",
+          create: "POST /api/team-members",
+          get: "GET /api/team-members/detail/:id",
+          update: "PUT /api/team-members/:id",
+          delete: "DELETE /api/team-members/:id",
+          toggleStatus: "PATCH /api/team-members/:id/toggle-status",
+        },
+        content: {
+          list: "GET /api/content-management",
+          create: "POST /api/content-management",
+          get: "GET /api/content-management/:id",
+          update: "PUT /api/content-management/:id",
+          delete: "DELETE /api/content-management/:id",
+        },
+        enquiry: {
+          list: "GET /api/contact-inquiries",
+          create: "POST /api/contact-inquiries",
+          get: "GET /api/contact-inquiries/:id",
+          update: "PUT /api/contact-inquiries/:id",
+          delete: "DELETE /api/contact-inquiries/:id",
+        },
+        media: {
+          upload: "POST /api/*/upload",
+          delete: "DELETE /api/media/:id",
         },
       },
     })

@@ -17,6 +17,8 @@ const initiativeRoutes_1 = __importDefault(require("./routes/initiativeRoutes"))
 const ventureRoutes_1 = __importDefault(require("./routes/ventureRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const teamMemberRoutes_1 = __importDefault(require("./routes/teamMemberRoutes"));
+const contentManagementRoutes_1 = __importDefault(require("./routes/contentManagementRoutes"));
+const contactInquiryRoutes_1 = __importDefault(require("./routes/contactInquiryRoutes"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const constants_1 = require("./utils/constants");
 const app = (0, express_1.default)();
@@ -135,6 +137,8 @@ app.use("/api/initiatives", initiativeRoutes_1.default);
 app.use("/api/ventures", ventureRoutes_1.default);
 app.use("/api/media", uploadRoutes_1.default);
 app.use("/api/team-members", teamMemberRoutes_1.default);
+app.use("/api/content-management", contentManagementRoutes_1.default);
+app.use("/api/contact-inquiries", contactInquiryRoutes_1.default);
 // Health check with more details
 app.get("/api/health", (req, res) => {
     res.json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Server is running", {
@@ -177,6 +181,32 @@ app.get("/api/docs", (req, res) => {
                 get: "GET /api/portfolio-ventures/:id",
                 update: "PUT /api/portfolio-ventures/:id",
                 delete: "DELETE /api/portfolio-ventures/:id",
+            },
+            teamMembers: {
+                list: "GET /api/team-members/admin",
+                create: "POST /api/team-members",
+                get: "GET /api/team-members/detail/:id",
+                update: "PUT /api/team-members/:id",
+                delete: "DELETE /api/team-members/:id",
+                toggleStatus: "PATCH /api/team-members/:id/toggle-status",
+            },
+            content: {
+                list: "GET /api/content-management",
+                create: "POST /api/content-management",
+                get: "GET /api/content-management/:id",
+                update: "PUT /api/content-management/:id",
+                delete: "DELETE /api/content-management/:id",
+            },
+            enquiry: {
+                list: "GET /api/contact-inquiries",
+                create: "POST /api/contact-inquiries",
+                get: "GET /api/contact-inquiries/:id",
+                update: "PUT /api/contact-inquiries/:id",
+                delete: "DELETE /api/contact-inquiries/:id",
+            },
+            media: {
+                upload: "POST /api/*/upload",
+                delete: "DELETE /api/media/:id",
             },
         },
     }));
