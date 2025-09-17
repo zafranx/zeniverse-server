@@ -14,6 +14,8 @@ interface IFounder {
   name: string;
   pic: string; // URL
   briefBio: string;
+  // isFromTeamMember?: boolean; // New field to track source
+  // teamMemberId?: string; // New field to store team member ID
 }
 
 export interface IVenture {
@@ -53,7 +55,7 @@ export interface VentureDocument extends IVenture, Document {}
 const financialProjectionSchema = new Schema<IFinancialProjection>(
   {
     year: { type: Number },
-    projectedRevenueUSD: { type: Number, },
+    projectedRevenueUSD: { type: Number },
   },
   { _id: false }
 );
@@ -68,9 +70,11 @@ const investorSchema = new Schema<IInvestor>(
 
 const founderSchema = new Schema<IFounder>(
   {
-    name: { type: String, trim: true,},
+    name: { type: String, trim: true },
     pic: { type: String },
-    briefBio: { type: String, trim: true, },
+    briefBio: { type: String, trim: true },
+    // isFromTeamMember: { type: Boolean, default: false },
+    // teamMemberId: { type: String, default: null },
   },
   { _id: false }
 );

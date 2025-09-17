@@ -7,15 +7,23 @@ import {
   RESPONSE_MESSAGES,
 } from '../utils/constants';
 import { AuthRequest } from '../types';
+import emailService from "../utils/emailService";
+import User from "../models/Admin"; //  for getting admin info
+
+// Add this to test your email service
+emailService.verifyConnection().then((result) => {
+  console.log("SMTP Connection:", result ? "Success" : "Failed");
+});
 
 // Create new contact inquiry (Public endpoint)
+
 export const createContactInquiry = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, phone, subject, message } = req.body;
 
     // Validate required fields
-    const requiredFields = ['name', 'email', 'message'];
-    const missing = requiredFields.filter(field => !req.body[field]);
+    const requiredFields = ["name", "email", "message"];
+    const missing = requiredFields.filter((field) => !req.body[field]);
 
     if (missing.length > 0) {
       return res
@@ -23,7 +31,7 @@ export const createContactInquiry = async (req: AuthRequest, res: Response) => {
         .json(
           __requestResponse(
             RESPONSE_CODES.VALIDATION_ERROR,
-            `Missing required fields: ${missing.join(', ')}`
+            `Missing required fields: ${missing.join(", ")}`
           )
         );
     }
@@ -34,18 +42,39 @@ export const createContactInquiry = async (req: AuthRequest, res: Response) => {
       phone,
       subject,
       message,
-      status: 'new',
-      isRead: false
+      status: "new",
+      isRead: false,
     });
 
     await contactInquiry.save();
+
+    // Send email notifications
+    try {
+      // Send notification to admin/company email
+      const companyEmail =
+        process.env.COMPANY_EMAIL ||
+        process.env.SMTP_USER ||
+        "admin@zeniverse-ventures.com";
+      await emailService.sendContactFormNotification({
+        inquiry: contactInquiry,
+        companyEmail: companyEmail,
+      });
+
+      // Send auto-reply to user
+      await emailService.sendContactFormAutoReply(contactInquiry);
+
+      console.warn("Email notifications sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send email notifications:", emailError);
+      // Don't fail the request if email fails, just log it
+    }
 
     const responseData = {
       id: contactInquiry._id,
       name: contactInquiry.name,
       email: contactInquiry.email,
       subject: contactInquiry.subject,
-      createdAt: contactInquiry.createdAt
+      createdAt: contactInquiry.createdAt,
     };
 
     res
@@ -53,12 +82,12 @@ export const createContactInquiry = async (req: AuthRequest, res: Response) => {
       .json(
         __requestResponse(
           RESPONSE_CODES.CREATED,
-          RESPONSE_MESSAGES.CREATED,
+          RESPONSE_MESSAGES.EMAIL_SEND,
           responseData
         )
       );
   } catch (error: any) {
-    console.error('Error creating contact inquiry:', error);
+    console.error("Error creating contact inquiry:", error);
     res
       .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
       .json(
@@ -71,7 +100,10 @@ export const createContactInquiry = async (req: AuthRequest, res: Response) => {
 };
 
 // Get all contact inquiries (Admin only)
-export const getAllContactInquiries = async (req: AuthRequest, res: Response) => {
+export const getAllContactInquiries = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const {
       page = 1,
@@ -79,8 +111,8 @@ export const getAllContactInquiries = async (req: AuthRequest, res: Response) =>
       status,
       isRead,
       search,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortBy = "createdAt",
+      sortOrder = "desc",
     } = req.query;
 
     const pageNumber = parseInt(page as string, 10);
@@ -89,31 +121,31 @@ export const getAllContactInquiries = async (req: AuthRequest, res: Response) =>
 
     // Build filter object
     const filter: any = {};
-    
+
     if (status) {
       filter.status = status;
     }
-    
+
     if (isRead !== undefined) {
-      filter.isRead = isRead === 'true';
+      filter.isRead = isRead === "true";
     }
-    
+
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { subject: { $regex: search, $options: 'i' } },
-        { message: { $regex: search, $options: 'i' } }
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { subject: { $regex: search, $options: "i" } },
+        { message: { $regex: search, $options: "i" } },
       ];
     }
 
     // Build sort object
     const sort: any = {};
-    sort[sortBy as string] = sortOrder === 'desc' ? -1 : 1;
+    sort[sortBy as string] = sortOrder === "desc" ? -1 : 1;
 
     const inquiries = await ContactInquiry.find(filter)
-      .populate('readBy', 'username email')
-      .populate('repliedBy', 'username email')
+      .populate("readBy", "username email")
+      .populate("repliedBy", "username email")
       .sort(sort)
       .skip(skip)
       .limit(limitNumber)
@@ -132,7 +164,7 @@ export const getAllContactInquiries = async (req: AuthRequest, res: Response) =>
         hasNextPage: pageNumber < totalPages,
         hasPrevPage: pageNumber > 1,
       },
-      unreadCount
+      unreadCount,
     };
 
     res
@@ -145,7 +177,7 @@ export const getAllContactInquiries = async (req: AuthRequest, res: Response) =>
         )
       );
   } catch (error: any) {
-    console.error('Error fetching contact inquiries:', error);
+    console.error("Error fetching contact inquiries:", error);
     res
       .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
       .json(
@@ -158,7 +190,10 @@ export const getAllContactInquiries = async (req: AuthRequest, res: Response) =>
 };
 
 // Get single contact inquiry by ID (Admin only)
-export const getContactInquiryById = async (req: AuthRequest, res: Response) => {
+export const getContactInquiryById = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { id } = req.params;
 
@@ -166,16 +201,13 @@ export const getContactInquiryById = async (req: AuthRequest, res: Response) => 
       return res
         .status(RESPONSE_CODES.BAD_REQUEST)
         .json(
-          __requestResponse(
-            RESPONSE_CODES.BAD_REQUEST,
-            'Invalid inquiry ID'
-          )
+          __requestResponse(RESPONSE_CODES.BAD_REQUEST, "Invalid inquiry ID")
         );
     }
 
     const inquiry = await ContactInquiry.findById(id)
-      .populate('readBy', 'username email')
-      .populate('repliedBy', 'username email')
+      .populate("readBy", "username email")
+      .populate("repliedBy", "username email")
       .lean();
 
     if (!inquiry) {
@@ -199,7 +231,7 @@ export const getContactInquiryById = async (req: AuthRequest, res: Response) => 
         )
       );
   } catch (error: any) {
-    console.error('Error fetching contact inquiry:', error);
+    console.error("Error fetching contact inquiry:", error);
     res
       .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
       .json(
@@ -221,10 +253,7 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
       return res
         .status(RESPONSE_CODES.BAD_REQUEST)
         .json(
-          __requestResponse(
-            RESPONSE_CODES.BAD_REQUEST,
-            'Invalid inquiry ID'
-          )
+          __requestResponse(RESPONSE_CODES.BAD_REQUEST, "Invalid inquiry ID")
         );
     }
 
@@ -234,12 +263,12 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
         isRead: true,
         readAt: new Date(),
         readBy: adminId,
-        status: 'read'
+        status: "read",
       },
       { new: true }
     )
-      .populate('readBy', 'username email')
-      .populate('repliedBy', 'username email');
+      .populate("readBy", "username email")
+      .populate("repliedBy", "username email");
 
     if (!inquiry) {
       return res
@@ -257,12 +286,12 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
       .json(
         __requestResponse(
           RESPONSE_CODES.SUCCESS,
-          'Inquiry marked as read successfully',
+          "Inquiry marked as read successfully",
           inquiry
         )
       );
   } catch (error: any) {
-    console.error('Error marking inquiry as read:', error);
+    console.error("Error marking inquiry as read:", error);
     res
       .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
       .json(
@@ -285,10 +314,7 @@ export const replyToInquiry = async (req: AuthRequest, res: Response) => {
       return res
         .status(RESPONSE_CODES.BAD_REQUEST)
         .json(
-          __requestResponse(
-            RESPONSE_CODES.BAD_REQUEST,
-            'Invalid inquiry ID'
-          )
+          __requestResponse(RESPONSE_CODES.BAD_REQUEST, "Invalid inquiry ID")
         );
     }
 
@@ -298,7 +324,7 @@ export const replyToInquiry = async (req: AuthRequest, res: Response) => {
         .json(
           __requestResponse(
             RESPONSE_CODES.VALIDATION_ERROR,
-            'Reply message is required'
+            "Reply message is required"
           )
         );
     }
@@ -315,11 +341,20 @@ export const replyToInquiry = async (req: AuthRequest, res: Response) => {
         );
     }
 
+    // Get admin user info for email
+    const adminUser = await User.findById(adminId).select(
+      "username email firstName lastName"
+    );
+    const adminName =
+      adminUser?.firstName && adminUser?.lastName
+        ? `${adminUser.firstName} ${adminUser.lastName}`
+        : adminUser?.username || "Admin";
+
     // Update inquiry with reply
     inquiry.replyMessage = replyMessage;
     inquiry.repliedAt = new Date();
     inquiry.repliedBy = adminId;
-    inquiry.status = 'replied';
+    inquiry.status = "replied";
     inquiry.isRead = true;
     if (!inquiry.readAt) {
       inquiry.readAt = new Date();
@@ -328,24 +363,30 @@ export const replyToInquiry = async (req: AuthRequest, res: Response) => {
 
     await inquiry.save();
 
-    // TODO: Send email to user (will implement with nodemailer)
-    // await sendReplyEmail(inquiry.email, inquiry.name, replyMessage, inquiry.subject);
+    // Send email reply to user
+    try {
+      await emailService.sendInquiryReply(inquiry, replyMessage, adminName);
+      console.log("Reply email sent successfully to:", inquiry.email);
+    } catch (emailError) {
+      console.error("Failed to send reply email:", emailError);
+      // Don't fail the request if email fails, just log it
+    }
 
     const updatedInquiry = await ContactInquiry.findById(id)
-      .populate('readBy', 'username email')
-      .populate('repliedBy', 'username email');
+      .populate("readBy", "username email")
+      .populate("repliedBy", "username email");
 
     res
       .status(RESPONSE_CODES.SUCCESS)
       .json(
         __requestResponse(
           RESPONSE_CODES.SUCCESS,
-          'Reply sent successfully',
+          "Reply sent successfully",
           updatedInquiry
         )
       );
   } catch (error: any) {
-    console.error('Error sending reply:', error);
+    console.error("Error sending reply:", error);
     res
       .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
       .json(

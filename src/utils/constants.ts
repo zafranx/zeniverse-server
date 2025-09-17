@@ -270,6 +270,7 @@ const RESPONSE_MESSAGES = {
   TOKEN_EXPIRED: "Token has expired",
   FILE_UPLOAD_ERROR: "File upload failed",
   FILE_DELETE_ERROR: "File deletion failed",
+  EMAIL_SEND: "Email Send Successfully",
 };
 
 export {

@@ -12,7 +12,7 @@ import {
 import {
   authenticateToken,
   requireAdminOrSuperAdmin,
-} from "../middleware/auth"; // Assuming you have admin auth middleware
+} from "../middleware/auth";
 
 const router = express.Router();
 

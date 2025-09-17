@@ -34,19 +34,16 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Unified Contact Info Schema
-const contactInfoSchema = new mongoose_1.Schema({
-    type: {
+// Contact Detail Schema
+const contactDetailSchema = new mongoose_1.Schema({
+    id: {
         type: String,
-        enum: ['phone', 'email', 'address', 'fax', 'website', 'social'],
         required: true,
     },
-    platform: {
+    type: {
         type: String,
-        enum: ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram'],
-        required: function () {
-            return this.type === 'social';
-        },
+        enum: ['phone', 'email', 'address', 'fax', 'website'],
+        required: true,
     },
     label: {
         type: String,
@@ -57,18 +54,6 @@ const contactInfoSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
         required: true,
-    },
-    url: {
-        type: String,
-        trim: true,
-        required: function () {
-            return this.type === 'social';
-        },
-    },
-    icon: {
-        type: String,
-        trim: true,
-        required: false,
     },
     isPrimary: {
         type: Boolean,
@@ -83,92 +68,60 @@ const contactInfoSchema = new mongoose_1.Schema({
         default: 0,
     },
 }, { _id: false });
-const contentSectionSchema = new mongoose_1.Schema({
-    title: {
+// Social Media Schema
+const socialMediaLinkSchema = new mongoose_1.Schema({
+    id: {
+        type: String,
+        required: true,
+    },
+    platform: {
+        type: String,
+        enum: ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram'],
+        required: true,
+    },
+    label: {
+        type: String,
+        trim: true,
+        required: true,
+    },
+    url: {
+        type: String,
+        trim: true,
+        required: true,
+    },
+    icon: {
         type: String,
         trim: true,
         required: false,
-    },
-    content: {
-        type: String,
-        required: false,
-    },
-    order: {
-        type: Number,
-        default: 0,
     },
     isActive: {
         type: Boolean,
         default: true,
     },
-}, { _id: false });
-const seoSettingsSchema = new mongoose_1.Schema({
-    metaTitle: {
-        type: String,
-        trim: true,
-        maxlength: 60,
-        required: false,
-    },
-    metaDescription: {
-        type: String,
-        trim: true,
-        maxlength: 160,
-        required: false,
-    },
-    keywords: [{
-            type: String,
-            trim: true,
-            required: false,
-        }],
-    canonicalUrl: {
-        type: String,
-        trim: true,
-        required: false,
-    },
-    ogTitle: {
-        type: String,
-        trim: true,
-        maxlength: 60,
-        required: false,
-    },
-    ogDescription: {
-        type: String,
-        trim: true,
-        maxlength: 160,
-        required: false,
-    },
-    ogImage: {
-        type: String,
-        trim: true,
-        required: false,
+    order: {
+        type: Number,
+        default: 0,
     },
 }, { _id: false });
-const contentManagementSchema = new mongoose_1.Schema({
-    type: {
-        type: String,
-        enum: ['privacy_policy', 'terms_of_service', 'contact_details', 'about_us', 'faq'],
-        required: false,
-    },
+// Main ContactSocial Schema
+const contactSocialSchema = new mongoose_1.Schema({
     title: {
         type: String,
         trim: true,
         maxlength: 200,
-        required: false,
+        required: true,
+        default: "Contact & Social Media Information",
     },
     slug: {
         type: String,
         unique: true,
         trim: true,
         lowercase: true,
-        required: false,
+        required: true,
+        default: "contact-social-info",
     },
-    content: {
-        type: String, // Rich text content from editor
-        required: false,
-    },
-    sections: [contentSectionSchema],
-    contactInfo: [contactInfoSchema], // Unified contact and social media
-    seo: seoSettingsSchema,
+    contactDetails: [contactDetailSchema],
+    socialMediaLinks: [socialMediaLinkSchema],
     isPublished: {
         type: Boolean,
         default: false,
@@ -179,37 +132,32 @@ const contentManagementSchema = new mongoose_1.Schema({
     version: {
         type: String,
         default: "1.0",
-        required: false,
+        required: true,
     },
     createdBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Admin',
-        required: false,
+        required: true,
     },
     lastModifiedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Admin',
-        required: false,
+        required: true,
     },
 }, {
     timestamps: true,
 });
 // Indexes for better performance
-contentManagementSchema.index({ type: 1, isPublished: 1 });
-contentManagementSchema.index({ title: "text", content: "text" });
-contentManagementSchema.index({ "contactInfo.type": 1, "contactInfo.isActive": 1 });
-// Pre-save middleware to handle slug generation and publishing
-contentManagementSchema.pre('save', function (next) {
+contactSocialSchema.index({ slug: 1 });
+contactSocialSchema.index({ isPublished: 1 });
+contactSocialSchema.index({ "contactDetails.type": 1, "contactDetails.isActive": 1 });
+contactSocialSchema.index({ "socialMediaLinks.platform": 1, "socialMediaLinks.isActive": 1 });
+// Pre-save middleware
+contactSocialSchema.pre('save', function (next) {
     if (this.isModified('isPublished') && this.isPublished && !this.publishedAt) {
         this.publishedAt = new Date();
     }
-    if (this.isModified('title') && !this.slug) {
-        this.slug = this.title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-    }
     next();
 });
-exports.default = mongoose_1.default.model("ContentManagement", contentManagementSchema);
-//# sourceMappingURL=ContentManagement.js.map
+exports.default = mongoose_1.default.model("ContactSocial", contactSocialSchema);
+//# sourceMappingURL=ContactSocial.js.map

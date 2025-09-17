@@ -17,8 +17,9 @@ const initiativeRoutes_1 = __importDefault(require("./routes/initiativeRoutes"))
 const ventureRoutes_1 = __importDefault(require("./routes/ventureRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const teamMemberRoutes_1 = __importDefault(require("./routes/teamMemberRoutes"));
-const contentManagementRoutes_1 = __importDefault(require("./routes/contentManagementRoutes"));
 const contactInquiryRoutes_1 = __importDefault(require("./routes/contactInquiryRoutes"));
+const contactSocialRoutes_1 = __importDefault(require("./routes/contactSocialRoutes"));
+const contentRoutes_1 = __importDefault(require("./routes/contentRoutes"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const constants_1 = require("./utils/constants");
 const app = (0, express_1.default)();
@@ -137,7 +138,10 @@ app.use("/api/initiatives", initiativeRoutes_1.default);
 app.use("/api/ventures", ventureRoutes_1.default);
 app.use("/api/media", uploadRoutes_1.default);
 app.use("/api/team-members", teamMemberRoutes_1.default);
-app.use("/api/content-management", contentManagementRoutes_1.default);
+// app.use("/api/content-management", contentRoutes);
+app.use("/api/contact-social", contactSocialRoutes_1.default);
+app.use("/api/content", contentRoutes_1.default);
+// enquiry api
 app.use("/api/contact-inquiries", contactInquiryRoutes_1.default);
 // Health check with more details
 app.get("/api/health", (req, res) => {

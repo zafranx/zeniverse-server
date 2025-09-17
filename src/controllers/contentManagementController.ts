@@ -625,14 +625,15 @@ export const toggleContentStatus = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ===== CONTACT DETAILS MANAGEMENT =====
+// ===== UNIFIED CONTACT INFO MANAGEMENT =====
 
-// Get contact details for a content item
-export const getContactDetails = async (req: AuthRequest, res: Response) => {
+// Get all contact info (both contact details and social media)
+export const getContactInfo = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { type } = req.query; // Optional filter by type
 
-    const content = await ContentManagement.findById(id).select('contactDetails');
+    const content = await ContentManagement.findById(id).select('contactInfo');
     if (!content) {
       return res
         .status(RESPONSE_CODES.NOT_FOUND)
@@ -644,13 +645,126 @@ export const getContactDetails = async (req: AuthRequest, res: Response) => {
         );
     }
 
+    let contactInfo = content.contactInfo || [];
+    
+    // Filter by type if specified
+    if (type) {
+      contactInfo = contactInfo.filter(info => info.type === type);
+    }
+
+    // Separate contact details and social media for backward compatibility
+    const contactDetails = contactInfo.filter(info => info.type !== 'social');
+    const socialMedia = contactInfo.filter(info => info.type === 'social');
+
     res
       .status(RESPONSE_CODES.SUCCESS)
       .json(
         __requestResponse(
           RESPONSE_CODES.SUCCESS,
           RESPONSE_MESSAGES.SUCCESS,
-          content.contactDetails || []
+          {
+            contactInfo,
+            contactDetails, // For backward compatibility
+            socialMedia, // For backward compatibility
+          }
+        )
+      );
+  } catch (error) {
+    console.error("Error fetching contact info:", error);
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
+  }
+};
+
+// Update contact info (unified endpoint)
+export const updateContactInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { contactInfo } = req.body;
+
+    const updatedContent = await ContentManagement.findByIdAndUpdate(
+      id,
+      {
+        contactInfo,
+        lastModifiedBy: req.user?.id,
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    ).select('contactInfo');
+
+    if (!updatedContent) {
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND
+          )
+        );
+    }
+
+    const contactInfo_result = updatedContent.contactInfo || [];
+    const contactDetails = contactInfo_result.filter(info => info.type !== 'social');
+    const socialMedia = contactInfo_result.filter(info => info.type === 'social');
+
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          "Contact information updated successfully",
+          {
+            contactInfo: contactInfo_result,
+            contactDetails,
+            socialMedia,
+          }
+        )
+      );
+  } catch (error) {
+    console.error("Error updating contact info:", error);
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
+  }
+};
+
+// Legacy endpoints for backward compatibility
+export const getContactDetails = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const content = await ContentManagement.findById(id).select('contactInfo');
+    if (!content) {
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            "Content not found"
+          )
+        );
+    }
+
+    const contactDetails = (content.contactInfo || []).filter(info => info.type !== 'social');
+
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          RESPONSE_MESSAGES.SUCCESS,
+          contactDetails
         )
       );
   } catch (error) {
@@ -666,23 +780,14 @@ export const getContactDetails = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Update contact details for a content item
 export const updateContactDetails = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { contactDetails } = req.body;
 
-    const updatedContent = await ContentManagement.findByIdAndUpdate(
-      id,
-      {
-        contactDetails,
-        lastModifiedBy: req.user?.id,
-        updatedAt: new Date(),
-      },
-      { new: true, runValidators: true }
-    ).select('contactDetails');
-
-    if (!updatedContent) {
+    // Get existing contact info
+    const content = await ContentManagement.findById(id);
+    if (!content) {
       return res
         .status(RESPONSE_CODES.NOT_FOUND)
         .json(
@@ -693,13 +798,29 @@ export const updateContactDetails = async (req: AuthRequest, res: Response) => {
         );
     }
 
+    // Keep social media, replace contact details
+    const socialMedia = (content.contactInfo || []).filter(info => info.type === 'social');
+    const newContactInfo = [...contactDetails, ...socialMedia];
+
+    const updatedContent = await ContentManagement.findByIdAndUpdate(
+      id,
+      {
+        contactInfo: newContactInfo,
+        lastModifiedBy: req.user?.id,
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    ).select('contactInfo');
+
+    const updatedContactDetails = (updatedContent?.contactInfo || []).filter(info => info.type !== 'social');
+
     res
       .status(RESPONSE_CODES.SUCCESS)
       .json(
         __requestResponse(
           RESPONSE_CODES.SUCCESS,
           "Contact details updated successfully",
-          updatedContent.contactDetails
+          updatedContactDetails
         )
       );
   } catch (error) {
@@ -715,14 +836,11 @@ export const updateContactDetails = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ===== SOCIAL MEDIA LINKS MANAGEMENT =====
-
-// Get social media links for a content item
 export const getSocialMediaLinks = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const content = await ContentManagement.findById(id).select('socialMediaLinks');
+    const content = await ContentManagement.findById(id).select('contactInfo');
     if (!content) {
       return res
         .status(RESPONSE_CODES.NOT_FOUND)
@@ -734,13 +852,15 @@ export const getSocialMediaLinks = async (req: AuthRequest, res: Response) => {
         );
     }
 
+    const socialMediaLinks = (content.contactInfo || []).filter(info => info.type === 'social');
+
     res
       .status(RESPONSE_CODES.SUCCESS)
       .json(
         __requestResponse(
           RESPONSE_CODES.SUCCESS,
           RESPONSE_MESSAGES.SUCCESS,
-          content.socialMediaLinks || []
+          socialMediaLinks
         )
       );
   } catch (error) {
@@ -756,23 +876,14 @@ export const getSocialMediaLinks = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Update social media links for a content item
 export const updateSocialMediaLinks = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { socialMediaLinks } = req.body;
 
-    const updatedContent = await ContentManagement.findByIdAndUpdate(
-      id,
-      {
-        socialMediaLinks,
-        lastModifiedBy: req.user?.id,
-        updatedAt: new Date(),
-      },
-      { new: true, runValidators: true }
-    ).select('socialMediaLinks');
-
-    if (!updatedContent) {
+    // Get existing contact info
+    const content = await ContentManagement.findById(id);
+    if (!content) {
       return res
         .status(RESPONSE_CODES.NOT_FOUND)
         .json(
@@ -783,13 +894,29 @@ export const updateSocialMediaLinks = async (req: AuthRequest, res: Response) =>
         );
     }
 
+    // Keep contact details, replace social media
+    const contactDetails = (content.contactInfo || []).filter(info => info.type !== 'social');
+    const newContactInfo = [...contactDetails, ...socialMediaLinks];
+
+    const updatedContent = await ContentManagement.findByIdAndUpdate(
+      id,
+      {
+        contactInfo: newContactInfo,
+        lastModifiedBy: req.user?.id,
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
+    ).select('contactInfo');
+
+    const updatedSocialMedia = (updatedContent?.contactInfo || []).filter(info => info.type === 'social');
+
     res
       .status(RESPONSE_CODES.SUCCESS)
       .json(
         __requestResponse(
           RESPONSE_CODES.SUCCESS,
           "Social media links updated successfully",
-          updatedContent.socialMediaLinks
+          updatedSocialMedia
         )
       );
   } catch (error) {

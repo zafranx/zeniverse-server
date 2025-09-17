@@ -13,12 +13,13 @@ import initiativeRoutes from "./routes/initiativeRoutes";
 import portfolioVentureRoutes from "./routes/ventureRoutes";
 import uploadRoute from "./routes/uploadRoutes";
 import teamMemberRoutes from "./routes/teamMemberRoutes";
-import contentRoutes from "./routes/contentManagementRoutes";
+// import contentRoutes from "./routes/contentManagementRoutes";
 import enquiryRoutes from "./routes/contactInquiryRoutes";
-
+import contactSocialRoutes from "./routes/contactSocialRoutes";
+import newContentRoutes from "./routes/contentRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import { __requestResponse, RESPONSE_CODES } from "./utils/constants";
-
+import cloudinaryRoutes from "./routes/cloudinaryRoutes";
 const app = express();
 
 // Create uploads directory if it doesn't exist
@@ -122,7 +123,7 @@ const createLimiter = (windowMs: number, max: number, message: string) =>
 
 // File upload rate limiting
 app.use("/api/*/upload", createLimiter(60 * 1000, 10, "Too many file uploads"));
-
+// app.use("/api/cloudinary", cloudinaryRoutes);
 // Body parsing middleware
 app.use(
   express.json({
@@ -162,7 +163,13 @@ app.use("/api/initiatives", initiativeRoutes);
 app.use("/api/ventures", portfolioVentureRoutes);
 app.use("/api/media", uploadRoute);
 app.use("/api/team-members", teamMemberRoutes);
-app.use("/api/content-management", contentRoutes);
+app.use("/api/cloudinary", cloudinaryRoutes);
+// app.use("/api/content-management", contentRoutes);
+
+app.use("/api/contact-social", contactSocialRoutes);
+app.use("/api/content", newContentRoutes);
+
+// enquiry api
 app.use("/api/contact-inquiries", enquiryRoutes);
 
 // Health check with more details
@@ -259,101 +266,3 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 export default app;
-
-// import express from "express";
-// import cors from "cors";
-// import helmet from "helmet";
-// import rateLimit from "express-rate-limit";
-// import path from "path";
-// import fs from "fs";
-
-// import adminRoutes from "./routes/adminRoutes";
-// import newsRoutes from "./routes/newsRoutes";
-// import initiativeRoutes from "./routes/initiativeRoutes";
-// import portfolioRoutes from "./routes/portfolioRoutes";
-// import { errorHandler } from "./middleware/errorHandler";
-// import { __requestResponse, RESPONSE_CODES } from "./utils/constants";
-
-// const app = express();
-
-// // Create uploads directory if it doesn't exist
-// const uploadsDir = path.join(__dirname, "../uploads");
-// if (!fs.existsSync(uploadsDir)) {
-//   fs.mkdirSync(uploadsDir, { recursive: true });
-// }
-
-// // Security middleware
-// app.use(
-//   helmet({
-//     crossOriginResourcePolicy: { policy: "cross-origin" },
-//   })
-// );
-
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL?.split(",") || ["http://localhost:3000"],
-//     credentials: true,
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-
-// // Rate limiting
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // limit each IP to 100 requests per windowMs
-//   message: __requestResponse(
-//     429,
-//     "Too many requests from this IP, please try again later."
-//   ),
-//   standardHeaders: true,
-//   legacyHeaders: false,
-// });
-// app.use("/api", limiter);
-
-// // Stricter rate limiting for auth endpoints
-// const authLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 5, // limit each IP to 5 requests per windowMs for auth
-//   message: __requestResponse(
-//     429,
-//     "Too many authentication attempts, please try again later."
-//   ),
-// });
-// app.use("/api/admin/login", authLimiter);
-
-// // Body parsing middleware
-// app.use(express.json({ limit: "10mb" }));
-// app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// // Static file serving for local uploads
-// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
-// // API Routes
-// app.use("/api/admin", adminRoutes);
-// app.use("/api/news", newsRoutes);
-// app.use("/api/initiatives", initiativeRoutes);
-// app.use("/api/portfolio", portfolioRoutes);
-
-// // Health check
-// app.get("/api/health", (req, res) => {
-//   res.json(
-//     __requestResponse(RESPONSE_CODES.SUCCESS, "Server is running", {
-//       timestamp: new Date().toISOString(),
-//       storage: process.env.USE_CLOUDINARY === "true" ? "cloudinary" : "local",
-//       environment: process.env.NODE_ENV || "development",
-//     })
-//   );
-// });
-
-// // 404 handler
-// app.use((req, res) => {
-//   res
-//     .status(RESPONSE_CODES.NOT_FOUND)
-//     .json(__requestResponse(RESPONSE_CODES.NOT_FOUND, "Route not found"));
-// });
-
-// // Error handling middleware (must be last)
-// app.use(errorHandler);
-
-// export default app;

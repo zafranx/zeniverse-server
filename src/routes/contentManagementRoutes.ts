@@ -14,8 +14,7 @@ import {
   getSEOSettings,
   updateSEOSettings
 } from '../controllers/contentManagementController';
-// import { authenticateToken } from '../middleware/auth'; // Assuming you have admin auth middleware
-
+// import { authenticateToken } from '../middleware/auth';
 const router = express.Router();
 
 // Public routes

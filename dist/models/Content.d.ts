@@ -1,15 +1,4 @@
 import mongoose, { Document } from "mongoose";
-interface ContactInfo {
-    type: 'phone' | 'email' | 'address' | 'fax' | 'website' | 'social';
-    platform?: string;
-    label: string;
-    value: string;
-    url?: string;
-    icon?: string;
-    isPrimary: boolean;
-    isActive: boolean;
-    order?: number;
-}
 interface ContentSection {
     title: string;
     content: string;
@@ -25,24 +14,25 @@ interface SEOSettings {
     ogDescription?: string;
     ogImage?: string;
 }
-export interface ContentManagementDocument extends Document {
-    type: 'privacy_policy' | 'terms_of_service' | 'contact_details' | 'about_us' | 'faq';
+export interface ContentDocument extends Document {
+    type: 'privacy_policy' | 'terms_of_service' | 'about_us' | 'faq' | 'general';
     title: string;
     slug: string;
     content?: string;
     sections?: ContentSection[];
-    contactInfo?: ContactInfo[];
     seo?: SEOSettings;
     isPublished: boolean;
     publishedAt?: Date;
     version: string;
     createdBy: mongoose.Types.ObjectId;
     lastModifiedBy: mongoose.Types.ObjectId;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
-declare const _default: mongoose.Model<ContentManagementDocument, {}, {}, {}, mongoose.Document<unknown, {}, ContentManagementDocument, {}, {}> & ContentManagementDocument & Required<{
+declare const _default: mongoose.Model<ContentDocument, {}, {}, {}, mongoose.Document<unknown, {}, ContentDocument, {}, {}> & ContentDocument & Required<{
     _id: unknown;
 }> & {
     __v: number;
 }, any>;
 export default _default;
-//# sourceMappingURL=ContentManagement.d.ts.map
+//# sourceMappingURL=Content.d.ts.map

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSEOSettings = exports.getSEOSettings = exports.updateSocialMediaLinks = exports.getSocialMediaLinks = exports.updateContactDetails = exports.getContactDetails = exports.toggleContentStatus = exports.deleteContent = exports.updateContent = exports.createContent = exports.getContentBySlug = exports.getContentById = exports.getContentByType = exports.getAllContent = void 0;
+exports.updateSEOSettings = exports.getSEOSettings = exports.updateSocialMediaLinks = exports.getSocialMediaLinks = exports.updateContactDetails = exports.getContactDetails = exports.updateContactInfo = exports.getContactInfo = exports.toggleContentStatus = exports.deleteContent = exports.updateContent = exports.createContent = exports.getContentBySlug = exports.getContentById = exports.getContentByType = exports.getAllContent = void 0;
 const ContentManagement_1 = __importDefault(require("../models/ContentManagement"));
 const constants_1 = require("../utils/constants");
 // Helper function to generate unique slug
@@ -395,20 +395,90 @@ const toggleContentStatus = async (req, res) => {
     }
 };
 exports.toggleContentStatus = toggleContentStatus;
-// ===== CONTACT DETAILS MANAGEMENT =====
-// Get contact details for a content item
-const getContactDetails = async (req, res) => {
+// ===== UNIFIED CONTACT INFO MANAGEMENT =====
+// Get all contact info (both contact details and social media)
+const getContactInfo = async (req, res) => {
     try {
         const { id } = req.params;
-        const content = await ContentManagement_1.default.findById(id).select('contactDetails');
+        const { type } = req.query; // Optional filter by type
+        const content = await ContentManagement_1.default.findById(id).select('contactInfo');
         if (!content) {
             return res
                 .status(constants_1.RESPONSE_CODES.NOT_FOUND)
                 .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, "Content not found"));
         }
+        let contactInfo = content.contactInfo || [];
+        // Filter by type if specified
+        if (type) {
+            contactInfo = contactInfo.filter(info => info.type === type);
+        }
+        // Separate contact details and social media for backward compatibility
+        const contactDetails = contactInfo.filter(info => info.type !== 'social');
+        const socialMedia = contactInfo.filter(info => info.type === 'social');
         res
             .status(constants_1.RESPONSE_CODES.SUCCESS)
-            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, content.contactDetails || []));
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, {
+            contactInfo,
+            contactDetails, // For backward compatibility
+            socialMedia, // For backward compatibility
+        }));
+    }
+    catch (error) {
+        console.error("Error fetching contact info:", error);
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+    }
+};
+exports.getContactInfo = getContactInfo;
+// Update contact info (unified endpoint)
+const updateContactInfo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { contactInfo } = req.body;
+        const updatedContent = await ContentManagement_1.default.findByIdAndUpdate(id, {
+            contactInfo,
+            lastModifiedBy: req.user?.id,
+            updatedAt: new Date(),
+        }, { new: true, runValidators: true }).select('contactInfo');
+        if (!updatedContent) {
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
+        }
+        const contactInfo_result = updatedContent.contactInfo || [];
+        const contactDetails = contactInfo_result.filter(info => info.type !== 'social');
+        const socialMedia = contactInfo_result.filter(info => info.type === 'social');
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Contact information updated successfully", {
+            contactInfo: contactInfo_result,
+            contactDetails,
+            socialMedia,
+        }));
+    }
+    catch (error) {
+        console.error("Error updating contact info:", error);
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+    }
+};
+exports.updateContactInfo = updateContactInfo;
+// Legacy endpoints for backward compatibility
+const getContactDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const content = await ContentManagement_1.default.findById(id).select('contactInfo');
+        if (!content) {
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, "Content not found"));
+        }
+        const contactDetails = (content.contactInfo || []).filter(info => info.type !== 'social');
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, contactDetails));
     }
     catch (error) {
         console.error("Error fetching contact details:", error);
@@ -418,24 +488,29 @@ const getContactDetails = async (req, res) => {
     }
 };
 exports.getContactDetails = getContactDetails;
-// Update contact details for a content item
 const updateContactDetails = async (req, res) => {
     try {
         const { id } = req.params;
         const { contactDetails } = req.body;
-        const updatedContent = await ContentManagement_1.default.findByIdAndUpdate(id, {
-            contactDetails,
-            lastModifiedBy: req.user?.id,
-            updatedAt: new Date(),
-        }, { new: true, runValidators: true }).select('contactDetails');
-        if (!updatedContent) {
+        // Get existing contact info
+        const content = await ContentManagement_1.default.findById(id);
+        if (!content) {
             return res
                 .status(constants_1.RESPONSE_CODES.NOT_FOUND)
                 .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
         }
+        // Keep social media, replace contact details
+        const socialMedia = (content.contactInfo || []).filter(info => info.type === 'social');
+        const newContactInfo = [...contactDetails, ...socialMedia];
+        const updatedContent = await ContentManagement_1.default.findByIdAndUpdate(id, {
+            contactInfo: newContactInfo,
+            lastModifiedBy: req.user?.id,
+            updatedAt: new Date(),
+        }, { new: true, runValidators: true }).select('contactInfo');
+        const updatedContactDetails = (updatedContent?.contactInfo || []).filter(info => info.type !== 'social');
         res
             .status(constants_1.RESPONSE_CODES.SUCCESS)
-            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Contact details updated successfully", updatedContent.contactDetails));
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Contact details updated successfully", updatedContactDetails));
     }
     catch (error) {
         console.error("Error updating contact details:", error);
@@ -445,20 +520,19 @@ const updateContactDetails = async (req, res) => {
     }
 };
 exports.updateContactDetails = updateContactDetails;
-// ===== SOCIAL MEDIA LINKS MANAGEMENT =====
-// Get social media links for a content item
 const getSocialMediaLinks = async (req, res) => {
     try {
         const { id } = req.params;
-        const content = await ContentManagement_1.default.findById(id).select('socialMediaLinks');
+        const content = await ContentManagement_1.default.findById(id).select('contactInfo');
         if (!content) {
             return res
                 .status(constants_1.RESPONSE_CODES.NOT_FOUND)
                 .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, "Content not found"));
         }
+        const socialMediaLinks = (content.contactInfo || []).filter(info => info.type === 'social');
         res
             .status(constants_1.RESPONSE_CODES.SUCCESS)
-            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, content.socialMediaLinks || []));
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, socialMediaLinks));
     }
     catch (error) {
         console.error("Error fetching social media links:", error);
@@ -468,24 +542,29 @@ const getSocialMediaLinks = async (req, res) => {
     }
 };
 exports.getSocialMediaLinks = getSocialMediaLinks;
-// Update social media links for a content item
 const updateSocialMediaLinks = async (req, res) => {
     try {
         const { id } = req.params;
         const { socialMediaLinks } = req.body;
-        const updatedContent = await ContentManagement_1.default.findByIdAndUpdate(id, {
-            socialMediaLinks,
-            lastModifiedBy: req.user?.id,
-            updatedAt: new Date(),
-        }, { new: true, runValidators: true }).select('socialMediaLinks');
-        if (!updatedContent) {
+        // Get existing contact info
+        const content = await ContentManagement_1.default.findById(id);
+        if (!content) {
             return res
                 .status(constants_1.RESPONSE_CODES.NOT_FOUND)
                 .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
         }
+        // Keep contact details, replace social media
+        const contactDetails = (content.contactInfo || []).filter(info => info.type !== 'social');
+        const newContactInfo = [...contactDetails, ...socialMediaLinks];
+        const updatedContent = await ContentManagement_1.default.findByIdAndUpdate(id, {
+            contactInfo: newContactInfo,
+            lastModifiedBy: req.user?.id,
+            updatedAt: new Date(),
+        }, { new: true, runValidators: true }).select('contactInfo');
+        const updatedSocialMedia = (updatedContent?.contactInfo || []).filter(info => info.type === 'social');
         res
             .status(constants_1.RESPONSE_CODES.SUCCESS)
-            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Social media links updated successfully", updatedContent.socialMediaLinks));
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Social media links updated successfully", updatedSocialMedia));
     }
     catch (error) {
         console.error("Error updating social media links:", error);

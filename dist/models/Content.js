@@ -34,60 +34,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Unified Contact Info Schema
-const contactInfoSchema = new mongoose_1.Schema({
-    type: {
-        type: String,
-        enum: ['phone', 'email', 'address', 'fax', 'website', 'social'],
-        required: true,
-    },
-    platform: {
-        type: String,
-        enum: ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram'],
-        required: function () {
-            return this.type === 'social';
-        },
-    },
-    label: {
-        type: String,
-        trim: true,
-        required: true,
-    },
-    value: {
-        type: String,
-        trim: true,
-        required: true,
-    },
-    url: {
-        type: String,
-        trim: true,
-        required: function () {
-            return this.type === 'social';
-        },
-    },
-    icon: {
-        type: String,
-        trim: true,
-        required: false,
-    },
-    isPrimary: {
-        type: Boolean,
-        default: false,
-    },
-    isActive: {
-        type: Boolean,
-        default: true,
-    },
-    order: {
-        type: Number,
-        default: 0,
-    },
-}, { _id: false });
+// Content Section Schema
 const contentSectionSchema = new mongoose_1.Schema({
     title: {
         type: String,
         trim: true,
-        required: false,
     },
     content: {
         type: String,
@@ -102,6 +53,7 @@ const contentSectionSchema = new mongoose_1.Schema({
         default: true,
     },
 }, { _id: false });
+// SEO Settings Schema
 const seoSettingsSchema = new mongoose_1.Schema({
     metaTitle: {
         type: String,
@@ -143,31 +95,31 @@ const seoSettingsSchema = new mongoose_1.Schema({
         required: false,
     },
 }, { _id: false });
-const contentManagementSchema = new mongoose_1.Schema({
+// Main Content Schema
+const contentSchema = new mongoose_1.Schema({
     type: {
         type: String,
-        enum: ['privacy_policy', 'terms_of_service', 'contact_details', 'about_us', 'faq'],
-        required: false,
+        enum: ['privacy_policy', 'terms_of_service', 'about_us', 'faq', 'general'],
+        required: true,
     },
     title: {
         type: String,
         trim: true,
         maxlength: 200,
-        required: false,
+        // required: true,
     },
     slug: {
         type: String,
         unique: true,
         trim: true,
         lowercase: true,
-        required: false,
+        // required: true,
     },
     content: {
         type: String, // Rich text content from editor
         required: false,
     },
     sections: [contentSectionSchema],
-    contactInfo: [contactInfoSchema], // Unified contact and social media
     seo: seoSettingsSchema,
     isPublished: {
         type: Boolean,
@@ -179,27 +131,27 @@ const contentManagementSchema = new mongoose_1.Schema({
     version: {
         type: String,
         default: "1.0",
-        required: false,
+        // required: true,
     },
     createdBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Admin',
-        required: false,
+        // required: true,
     },
     lastModifiedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Admin',
-        required: false,
+        // required: true,
     },
 }, {
     timestamps: true,
 });
 // Indexes for better performance
-contentManagementSchema.index({ type: 1, isPublished: 1 });
-contentManagementSchema.index({ title: "text", content: "text" });
-contentManagementSchema.index({ "contactInfo.type": 1, "contactInfo.isActive": 1 });
+contentSchema.index({ type: 1, isPublished: 1 });
+contentSchema.index({ title: "text", content: "text" });
+contentSchema.index({ slug: 1 });
 // Pre-save middleware to handle slug generation and publishing
-contentManagementSchema.pre('save', function (next) {
+contentSchema.pre('save', function (next) {
     if (this.isModified('isPublished') && this.isPublished && !this.publishedAt) {
         this.publishedAt = new Date();
     }
@@ -211,5 +163,5 @@ contentManagementSchema.pre('save', function (next) {
     }
     next();
 });
-exports.default = mongoose_1.default.model("ContentManagement", contentManagementSchema);
-//# sourceMappingURL=ContentManagement.js.map
+exports.default = mongoose_1.default.model("Content", contentSchema);
+//# sourceMappingURL=Content.js.map

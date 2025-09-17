@@ -1,18 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-// Unified Contact Information Interface
-interface ContactInfo {
-  type: 'phone' | 'email' | 'address' | 'fax' | 'website' | 'social';
-  platform?: string; // For social media (facebook, twitter, etc.)
-  label: string;
-  value: string;
-  url?: string; // For social media links
-  icon?: string; // For social media icons
-  isPrimary: boolean;
-  isActive: boolean;
-  order?: number; // For display ordering
-}
-
 interface ContentSection {
   title: string;
   content: string; // Rich text content from editor
@@ -30,80 +17,28 @@ interface SEOSettings {
   ogImage?: string;
 }
 
-export interface ContentManagementDocument extends Document {
-  type: 'privacy_policy' | 'terms_of_service' | 'contact_details' | 'about_us' | 'faq';
+export interface ContentDocument extends Document {
+  type: 'privacy_policy' | 'terms_of_service' | 'about_us' | 'faq' | 'general';
   title: string;
   slug: string;
   content?: string; // Main rich text content
   sections?: ContentSection[]; // For structured content
-  contactInfo?: ContactInfo[]; // Unified contact and social media info
   seo?: SEOSettings; // SEO settings
   isPublished: boolean;
   publishedAt?: Date;
   version: string;
   createdBy: mongoose.Types.ObjectId;
   lastModifiedBy: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// Unified Contact Info Schema
-const contactInfoSchema = new Schema<ContactInfo>(
-  {
-    type: {
-      type: String,
-      enum: ['phone', 'email', 'address', 'fax', 'website', 'social'],
-      required: true,
-    },
-    platform: {
-      type: String,
-      enum: ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram'],
-      required: function() {
-        return this.type === 'social';
-      },
-    },
-    label: {
-      type: String,
-      trim: true,
-      required: true,
-    },
-    value: {
-      type: String,
-      trim: true,
-      required: true,
-    },
-    url: {
-      type: String,
-      trim: true,
-      required: function() {
-        return this.type === 'social';
-      },
-    },
-    icon: {
-      type: String,
-      trim: true,
-      required: false,
-    },
-    isPrimary: {
-      type: Boolean,
-      default: false,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    order: {
-      type: Number,
-      default: 0,
-    },
-  },
-  { _id: false }
-);
-
+// Content Section Schema
 const contentSectionSchema = new Schema<ContentSection>(
   {
     title: {
       type: String,
       trim: true,
-      required: false,
     },
     content: {
       type: String,
@@ -121,6 +56,7 @@ const contentSectionSchema = new Schema<ContentSection>(
   { _id: false }
 );
 
+// SEO Settings Schema
 const seoSettingsSchema = new Schema<SEOSettings>(
   {
     metaTitle: {
@@ -166,32 +102,32 @@ const seoSettingsSchema = new Schema<SEOSettings>(
   { _id: false }
 );
 
-const contentManagementSchema = new Schema<ContentManagementDocument>(
+// Main Content Schema
+const contentSchema = new Schema<ContentDocument>(
   {
     type: {
       type: String,
-      enum: ['privacy_policy', 'terms_of_service', 'contact_details', 'about_us', 'faq'],
-      required: false,
+      enum: ['privacy_policy', 'terms_of_service', 'about_us', 'faq', 'general'],
+      required: true,
     },
     title: {
       type: String,
       trim: true,
       maxlength: 200,
-      required: false,
+      // required: true,
     },
     slug: {
       type: String,
       unique: true,
       trim: true,
       lowercase: true,
-      required: false,
+      // required: true,
     },
     content: {
       type: String, // Rich text content from editor
       required: false,
     },
     sections: [contentSectionSchema],
-    contactInfo: [contactInfoSchema], // Unified contact and social media
     seo: seoSettingsSchema,
     isPublished: {
       type: Boolean,
@@ -203,17 +139,17 @@ const contentManagementSchema = new Schema<ContentManagementDocument>(
     version: {
       type: String,
       default: "1.0",
-      required: false,
+      // required: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'Admin',
-      required: false,
+      // required: true,
     },
     lastModifiedBy: {
       type: Schema.Types.ObjectId,
       ref: 'Admin',
-      required: false,
+      // required: true,
     },
   },
   {
@@ -222,12 +158,12 @@ const contentManagementSchema = new Schema<ContentManagementDocument>(
 );
 
 // Indexes for better performance
-contentManagementSchema.index({ type: 1, isPublished: 1 });
-contentManagementSchema.index({ title: "text", content: "text" });
-contentManagementSchema.index({ "contactInfo.type": 1, "contactInfo.isActive": 1 });
+contentSchema.index({ type: 1, isPublished: 1 });
+contentSchema.index({ title: "text", content: "text" });
+contentSchema.index({ slug: 1 });
 
 // Pre-save middleware to handle slug generation and publishing
-contentManagementSchema.pre('save', function(next) {
+contentSchema.pre('save', function(next) {
   if (this.isModified('isPublished') && this.isPublished && !this.publishedAt) {
     this.publishedAt = new Date();
   }
@@ -242,7 +178,7 @@ contentManagementSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.model<ContentManagementDocument>(
-  "ContentManagement",
-  contentManagementSchema
+export default mongoose.model<ContentDocument>(
+  "Content",
+  contentSchema
 );
