@@ -119,6 +119,7 @@ declare const RESPONSE_MESSAGES: {
     TOKEN_EXPIRED: string;
     FILE_UPLOAD_ERROR: string;
     FILE_DELETE_ERROR: string;
+    EMAIL_SEND: string;
 };
 export { __requestResponse, __generateAuthToken, __randomNumber, __deleteFile, __deleteCloudinaryFile, __extractCloudinaryPublicId, __deepClone, __transformData, __formatDate, __formatDateddMMMyyyy, __validateEmail, __generateSlug, RESPONSE_CODES, RESPONSE_MESSAGES, monthNames, };
 //# sourceMappingURL=constants.d.ts.map

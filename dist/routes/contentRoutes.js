@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const contentController_1 = require("../controllers/contentController");
-// import { authenticateToken } from '../middleware/auth'; // Assuming you have admin auth middleware
+// import { authenticateToken } from '../middleware/auth'; 
 const router = express_1.default.Router();
 // Public routes
 router.get('/public/type/:type', contentController_1.getPublishedContentByType); // Get published content by type

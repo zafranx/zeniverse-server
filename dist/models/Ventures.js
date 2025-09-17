@@ -36,16 +36,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const financialProjectionSchema = new mongoose_1.Schema({
     year: { type: Number },
-    projectedRevenueUSD: { type: Number, },
+    projectedRevenueUSD: { type: Number },
 }, { _id: false });
 const investorSchema = new mongoose_1.Schema({
     name: { type: String, trim: true },
     logo: { type: String },
 }, { _id: false });
 const founderSchema = new mongoose_1.Schema({
-    name: { type: String, trim: true, },
+    name: { type: String, trim: true },
     pic: { type: String },
-    briefBio: { type: String, trim: true, },
+    briefBio: { type: String, trim: true },
+    // isFromTeamMember: { type: Boolean, default: false },
+    // teamMemberId: { type: String, default: null },
 }, { _id: false });
 const ventureSchema = new mongoose_1.Schema({
     ventureName: { type: String, required: true, trim: true, maxlength: 200 },

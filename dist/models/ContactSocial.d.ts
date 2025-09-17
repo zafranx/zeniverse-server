@@ -1,7 +1,6 @@
 import mongoose, { Document } from "mongoose";
 interface ContactDetail {
-    id: string;
-    type: 'phone' | 'email' | 'address' | 'fax' | 'website';
+    type: "phone" | "email" | "address" | "fax" | "website";
     label: string;
     value: string;
     isPrimary: boolean;
@@ -9,8 +8,7 @@ interface ContactDetail {
     order?: number;
 }
 interface SocialMediaLink {
-    id: string;
-    platform: 'facebook' | 'twitter' | 'linkedin' | 'instagram' | 'youtube' | 'tiktok' | 'pinterest' | 'whatsapp' | 'telegram';
+    platform: "facebook" | "twitter" | "linkedin" | "instagram" | "youtube" | "tiktok" | "pinterest" | "whatsapp" | "telegram";
     label: string;
     url: string;
     icon?: string;

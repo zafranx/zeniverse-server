@@ -36,24 +36,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 // Contact Detail Schema
 const contactDetailSchema = new mongoose_1.Schema({
-    id: {
-        type: String,
-        required: true,
-    },
     type: {
         type: String,
-        enum: ['phone', 'email', 'address', 'fax', 'website'],
+        enum: ["phone", "email", "address", "fax", "website"],
         required: true,
     },
     label: {
         type: String,
         trim: true,
-        required: true,
     },
     value: {
         type: String,
         trim: true,
-        required: true,
     },
     isPrimary: {
         type: Boolean,
@@ -67,32 +61,38 @@ const contactDetailSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
-}, { _id: false });
+});
 // Social Media Schema
 const socialMediaLinkSchema = new mongoose_1.Schema({
-    id: {
-        type: String,
-        required: true,
-    },
+    // id: {
+    //   type: String,
+    //   required: true,
+    // },
     platform: {
         type: String,
-        enum: ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram'],
-        required: true,
+        enum: [
+            "facebook",
+            "twitter",
+            "linkedin",
+            "instagram",
+            "youtube",
+            "tiktok",
+            "pinterest",
+            "whatsapp",
+            "telegram",
+        ],
     },
     label: {
         type: String,
         trim: true,
-        required: true,
     },
     url: {
         type: String,
         trim: true,
-        required: true,
     },
     icon: {
         type: String,
         trim: true,
-        required: false,
     },
     isActive: {
         type: Boolean,
@@ -102,14 +102,13 @@ const socialMediaLinkSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
-}, { _id: false });
+});
 // Main ContactSocial Schema
 const contactSocialSchema = new mongoose_1.Schema({
     title: {
         type: String,
         trim: true,
         maxlength: 200,
-        required: true,
         default: "Contact & Social Media Information",
     },
     slug: {
@@ -117,7 +116,6 @@ const contactSocialSchema = new mongoose_1.Schema({
         unique: true,
         trim: true,
         lowercase: true,
-        required: true,
         default: "contact-social-info",
     },
     contactDetails: [contactDetailSchema],
@@ -132,17 +130,14 @@ const contactSocialSchema = new mongoose_1.Schema({
     version: {
         type: String,
         default: "1.0",
-        required: true,
     },
     createdBy: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Admin',
-        required: true,
+        ref: "Admin",
     },
     lastModifiedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Admin',
-        required: true,
+        ref: "Admin",
     },
 }, {
     timestamps: true,
@@ -150,11 +145,17 @@ const contactSocialSchema = new mongoose_1.Schema({
 // Indexes for better performance
 contactSocialSchema.index({ slug: 1 });
 contactSocialSchema.index({ isPublished: 1 });
-contactSocialSchema.index({ "contactDetails.type": 1, "contactDetails.isActive": 1 });
-contactSocialSchema.index({ "socialMediaLinks.platform": 1, "socialMediaLinks.isActive": 1 });
+contactSocialSchema.index({
+    "contactDetails.type": 1,
+    "contactDetails.isActive": 1,
+});
+contactSocialSchema.index({
+    "socialMediaLinks.platform": 1,
+    "socialMediaLinks.isActive": 1,
+});
 // Pre-save middleware
-contactSocialSchema.pre('save', function (next) {
-    if (this.isModified('isPublished') && this.isPublished && !this.publishedAt) {
+contactSocialSchema.pre("save", function (next) {
+    if (this.isModified("isPublished") && this.isPublished && !this.publishedAt) {
         this.publishedAt = new Date();
     }
     next();

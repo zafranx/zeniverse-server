@@ -17,11 +17,13 @@ const initiativeRoutes_1 = __importDefault(require("./routes/initiativeRoutes"))
 const ventureRoutes_1 = __importDefault(require("./routes/ventureRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const teamMemberRoutes_1 = __importDefault(require("./routes/teamMemberRoutes"));
+// import contentRoutes from "./routes/contentManagementRoutes";
 const contactInquiryRoutes_1 = __importDefault(require("./routes/contactInquiryRoutes"));
 const contactSocialRoutes_1 = __importDefault(require("./routes/contactSocialRoutes"));
 const contentRoutes_1 = __importDefault(require("./routes/contentRoutes"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const constants_1 = require("./utils/constants");
+const cloudinaryRoutes_1 = __importDefault(require("./routes/cloudinaryRoutes"));
 const app = (0, express_1.default)();
 // Create uploads directory if it doesn't exist
 const uploadsDir = path_1.default.join(__dirname, "../uploads");
@@ -108,6 +110,7 @@ const createLimiter = (windowMs, max, message) => (0, express_rate_limit_1.defau
 // );
 // File upload rate limiting
 app.use("/api/*/upload", createLimiter(60 * 1000, 10, "Too many file uploads"));
+// app.use("/api/cloudinary", cloudinaryRoutes);
 // Body parsing middleware
 app.use(express_1.default.json({
     limit: "20mb",
@@ -138,6 +141,7 @@ app.use("/api/initiatives", initiativeRoutes_1.default);
 app.use("/api/ventures", ventureRoutes_1.default);
 app.use("/api/media", uploadRoutes_1.default);
 app.use("/api/team-members", teamMemberRoutes_1.default);
+app.use("/api/cloudinary", cloudinaryRoutes_1.default);
 // app.use("/api/content-management", contentRoutes);
 app.use("/api/contact-social", contactSocialRoutes_1.default);
 app.use("/api/content", contentRoutes_1.default);
@@ -224,87 +228,4 @@ app.use((req, res) => {
 // Error handling middleware (must be last)
 app.use(errorHandler_1.errorHandler);
 exports.default = app;
-// import express from "express";
-// import cors from "cors";
-// import helmet from "helmet";
-// import rateLimit from "express-rate-limit";
-// import path from "path";
-// import fs from "fs";
-// import adminRoutes from "./routes/adminRoutes";
-// import newsRoutes from "./routes/newsRoutes";
-// import initiativeRoutes from "./routes/initiativeRoutes";
-// import portfolioRoutes from "./routes/portfolioRoutes";
-// import { errorHandler } from "./middleware/errorHandler";
-// import { __requestResponse, RESPONSE_CODES } from "./utils/constants";
-// const app = express();
-// // Create uploads directory if it doesn't exist
-// const uploadsDir = path.join(__dirname, "../uploads");
-// if (!fs.existsSync(uploadsDir)) {
-//   fs.mkdirSync(uploadsDir, { recursive: true });
-// }
-// // Security middleware
-// app.use(
-//   helmet({
-//     crossOriginResourcePolicy: { policy: "cross-origin" },
-//   })
-// );
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL?.split(",") || ["http://localhost:3000"],
-//     credentials: true,
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-// // Rate limiting
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // limit each IP to 100 requests per windowMs
-//   message: __requestResponse(
-//     429,
-//     "Too many requests from this IP, please try again later."
-//   ),
-//   standardHeaders: true,
-//   legacyHeaders: false,
-// });
-// app.use("/api", limiter);
-// // Stricter rate limiting for auth endpoints
-// const authLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 5, // limit each IP to 5 requests per windowMs for auth
-//   message: __requestResponse(
-//     429,
-//     "Too many authentication attempts, please try again later."
-//   ),
-// });
-// app.use("/api/admin/login", authLimiter);
-// // Body parsing middleware
-// app.use(express.json({ limit: "10mb" }));
-// app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-// // Static file serving for local uploads
-// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-// // API Routes
-// app.use("/api/admin", adminRoutes);
-// app.use("/api/news", newsRoutes);
-// app.use("/api/initiatives", initiativeRoutes);
-// app.use("/api/portfolio", portfolioRoutes);
-// // Health check
-// app.get("/api/health", (req, res) => {
-//   res.json(
-//     __requestResponse(RESPONSE_CODES.SUCCESS, "Server is running", {
-//       timestamp: new Date().toISOString(),
-//       storage: process.env.USE_CLOUDINARY === "true" ? "cloudinary" : "local",
-//       environment: process.env.NODE_ENV || "development",
-//     })
-//   );
-// });
-// // 404 handler
-// app.use((req, res) => {
-//   res
-//     .status(RESPONSE_CODES.NOT_FOUND)
-//     .json(__requestResponse(RESPONSE_CODES.NOT_FOUND, "Route not found"));
-// });
-// // Error handling middleware (must be last)
-// app.use(errorHandler);
-// export default app;
 //# sourceMappingURL=app.js.map
