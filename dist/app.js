@@ -17,7 +17,7 @@ const initiativeRoutes_1 = __importDefault(require("./routes/initiativeRoutes"))
 const ventureRoutes_1 = __importDefault(require("./routes/ventureRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const teamMemberRoutes_1 = __importDefault(require("./routes/teamMemberRoutes"));
-// import contentRoutes from "./routes/contentManagementRoutes";
+// import contentRoutes from "./routes/contentManagementRoutes"; //  old api removed
 const contactInquiryRoutes_1 = __importDefault(require("./routes/contactInquiryRoutes"));
 const contactSocialRoutes_1 = __importDefault(require("./routes/contactSocialRoutes"));
 const contentRoutes_1 = __importDefault(require("./routes/contentRoutes"));
@@ -142,7 +142,7 @@ app.use("/api/ventures", ventureRoutes_1.default);
 app.use("/api/media", uploadRoutes_1.default);
 app.use("/api/team-members", teamMemberRoutes_1.default);
 app.use("/api/cloudinary", cloudinaryRoutes_1.default);
-// app.use("/api/content-management", contentRoutes);
+// app.use("/api/content-management", contentRoutes); // old api removed
 app.use("/api/contact-social", contactSocialRoutes_1.default);
 app.use("/api/content", contentRoutes_1.default);
 // enquiry api

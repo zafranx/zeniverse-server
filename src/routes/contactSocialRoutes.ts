@@ -34,12 +34,12 @@ router.delete('/:id', deleteContactSocial);
 // Publishing operations - using toggle function
 router.patch('/:id/toggle-status', toggleContactSocialStatus);
 
-// Contact Details management
+// Contact Details management -- ***** not implemented in admin
 router.post('/:id/contact-details', addContactDetail);
 router.put('/:id/contact-details/:contactId', updateContactDetail);
 router.delete('/:id/contact-details/:contactId', removeContactDetail);
 
-// Social Media Links management
+// Social Media Links management -- ***** not implemented in admin
 router.post('/:id/social-media', addSocialMediaLink);
 router.put('/:id/social-media/:socialId', updateSocialMediaLink);
 router.delete('/:id/social-media/:socialId', removeSocialMediaLink);

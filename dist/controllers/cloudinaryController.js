@@ -53,9 +53,11 @@ const searchCloudinaryMedia = async (req, res) => {
         };
         if (next_cursor)
             searchParams.next_cursor = next_cursor;
-        const result = await multer_1.cloudinary.search.expression(searchParams.expression)
+        const result = await multer_1.cloudinary.search
+            .expression(searchParams.expression)
             .max_results(searchParams.max_results)
-            .sort_by(searchParams.sort_by)
+            // .sort_by(searchParams.sort_by)
+            .sort_by(sort_by, direction)
             .execute();
         res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, {
             resources: result.resources,

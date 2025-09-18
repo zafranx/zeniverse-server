@@ -98,9 +98,11 @@ export const searchCloudinaryMedia = async (
 
     if (next_cursor) searchParams.next_cursor = next_cursor;
 
-    const result = await cloudinary.search.expression(searchParams.expression)
+    const result = await cloudinary.search
+      .expression(searchParams.expression)
       .max_results(searchParams.max_results)
-      .sort_by(searchParams.sort_by)
+      // .sort_by(searchParams.sort_by)
+      .sort_by(sort_by as string, direction as "asc" | "desc")
       .execute();
 
     res.status(RESPONSE_CODES.SUCCESS).json(

@@ -346,8 +346,8 @@ export const replyToInquiry = async (req: AuthRequest, res: Response) => {
       "username email firstName lastName"
     );
     const adminName =
-      adminUser?.firstName && adminUser?.lastName
-        ? `${adminUser.firstName} ${adminUser.lastName}`
+      (adminUser as any)?.firstName && (adminUser as any)?.lastName
+        ? `${(adminUser as any).firstName} ${(adminUser as any).lastName}`
         : adminUser?.username || "Admin";
 
     // Update inquiry with reply

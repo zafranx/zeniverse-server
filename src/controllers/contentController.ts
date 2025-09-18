@@ -679,29 +679,47 @@ export const updateSEOSettings = async (req: AuthRequest, res: Response) => {
 export const publishContent = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const content = await Content.findById(id);
     if (!content) {
-      return res.status(RESPONSE_CODES.NOT_FOUND).json(
-        __requestResponse(RESPONSE_CODES.NOT_FOUND, RESPONSE_MESSAGES.NOT_FOUND, null)
-      );
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND,
+            null
+          )
+        );
     }
 
     content.isPublished = true;
     content.publishedAt = new Date();
-    content.lastModifiedBy = req.user?.id;
-    content.lastModifiedAt = new Date();
-    
+    content.lastModifiedBy = req.user?.id as any; // Type assertion to handle potential undefined
+    content.updatedAt = new Date();
+
     await content.save();
 
-    res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(RESPONSE_CODES.SUCCESS, "Content published successfully", content)
-    );
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          "Content published successfully",
+          content
+        )
+      );
   } catch (error: any) {
     console.error("Error publishing content:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null)
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          error.message,
+          null
+        )
+      );
   }
 };
 
@@ -709,29 +727,47 @@ export const publishContent = async (req: AuthRequest, res: Response) => {
 export const unpublishContent = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const content = await Content.findById(id);
     if (!content) {
-      return res.status(RESPONSE_CODES.NOT_FOUND).json(
-        __requestResponse(RESPONSE_CODES.NOT_FOUND, RESPONSE_MESSAGES.NOT_FOUND, null)
-      );
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND,
+            null
+          )
+        );
     }
 
     content.isPublished = false;
     content.publishedAt = undefined;
-    content.lastModifiedBy = req.user?.id;
-    content.lastModifiedAt = new Date();
-    
+    content.lastModifiedBy = req.user?.id as any; // Type assertion to handle potential undefined
+    content.updatedAt = new Date();
+
     await content.save();
 
-    res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(RESPONSE_CODES.SUCCESS, "Content unpublished successfully", content)
-    );
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          "Content unpublished successfully",
+          content
+        )
+      );
   } catch (error: any) {
     console.error("Error unpublishing content:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null)
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          error.message,
+          null
+        )
+      );
   }
 };
 

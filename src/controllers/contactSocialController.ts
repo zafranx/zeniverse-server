@@ -584,7 +584,7 @@ export const updateContactDetail = async (req: AuthRequest, res: Response) => {
     }
 
     const detailIndex = contactSocial.contactDetails.findIndex(
-      (detail) => detail.id === detailId
+      (detail: any) => detail.id === detailId
     );
 
     if (detailIndex === -1) {
@@ -650,7 +650,7 @@ export const removeContactDetail = async (req: AuthRequest, res: Response) => {
 
     const initialLength = contactSocial.contactDetails.length;
     contactSocial.contactDetails = contactSocial.contactDetails.filter(
-      (detail) => detail.id !== detailId
+      (detail: any) => detail.id !== detailId
     );
 
     if (contactSocial.contactDetails.length === initialLength) {
@@ -743,7 +743,10 @@ export const addSocialMediaLink = async (req: AuthRequest, res: Response) => {
 };
 
 // Update social media link
-export const updateSocialMediaLink = async (req: AuthRequest, res: Response) => {
+export const updateSocialMediaLink = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { id, linkId } = req.params;
     const updateData = req.body;
@@ -761,7 +764,7 @@ export const updateSocialMediaLink = async (req: AuthRequest, res: Response) => 
     }
 
     const linkIndex = contactSocial.socialMediaLinks.findIndex(
-      (link) => link.id === linkId
+      (link: any) => link.id === linkId
     );
 
     if (linkIndex === -1) {
@@ -809,7 +812,10 @@ export const updateSocialMediaLink = async (req: AuthRequest, res: Response) => 
 };
 
 // Remove social media link
-export const removeSocialMediaLink = async (req: AuthRequest, res: Response) => {
+export const removeSocialMediaLink = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { id, linkId } = req.params;
 
@@ -827,7 +833,8 @@ export const removeSocialMediaLink = async (req: AuthRequest, res: Response) => 
 
     const initialLength = contactSocial.socialMediaLinks.length;
     contactSocial.socialMediaLinks = contactSocial.socialMediaLinks.filter(
-      (link) => link.id !== linkId
+      // (link: any) => link.id !== linkId
+      (link: any) => link._id !== linkId
     );
 
     if (contactSocial.socialMediaLinks.length === initialLength) {
@@ -888,7 +895,8 @@ export const publishContactSocial = async (req: AuthRequest, res: Response) => {
 
     contactSocial.isPublished = true;
     contactSocial.publishedAt = new Date();
-    contactSocial.lastModifiedBy = req.user?.id;
+    contactSocial.lastModifiedBy = req.user?.id as any; // Type assertion to handle potential undefined
+    contactSocial.updatedAt = new Date();
     await contactSocial.save();
 
     res
@@ -907,7 +915,7 @@ export const publishContactSocial = async (req: AuthRequest, res: Response) => {
       .json(
         __requestResponse(
           RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-          RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR,
           null
         )
       );
@@ -915,7 +923,10 @@ export const publishContactSocial = async (req: AuthRequest, res: Response) => {
 };
 
 // Unpublish contact social record
-export const unpublishContactSocial = async (req: AuthRequest, res: Response) => {
+export const unpublishContactSocial = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { id } = req.params;
 
@@ -933,7 +944,8 @@ export const unpublishContactSocial = async (req: AuthRequest, res: Response) =>
     }
 
     contactSocial.isPublished = false;
-    contactSocial.lastModifiedBy = req.user?.id;
+    contactSocial.lastModifiedBy = req.user?.id as any; // Type assertion to handle potential undefined
+    contactSocial.updatedAt = new Date();
     await contactSocial.save();
 
     res
@@ -952,7 +964,7 @@ export const unpublishContactSocial = async (req: AuthRequest, res: Response) =>
       .json(
         __requestResponse(
           RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-          RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR,
           null
         )
       );

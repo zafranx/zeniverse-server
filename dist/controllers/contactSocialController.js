@@ -502,7 +502,9 @@ const removeSocialMediaLink = async (req, res) => {
                 .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, "Contact social record not found"));
         }
         const initialLength = contactSocial.socialMediaLinks.length;
-        contactSocial.socialMediaLinks = contactSocial.socialMediaLinks.filter((link) => link.id !== linkId);
+        contactSocial.socialMediaLinks = contactSocial.socialMediaLinks.filter(
+        // (link: any) => link.id !== linkId
+        (link) => link._id !== linkId);
         if (contactSocial.socialMediaLinks.length === initialLength) {
             return res
                 .status(constants_1.RESPONSE_CODES.NOT_FOUND)
@@ -535,7 +537,8 @@ const publishContactSocial = async (req, res) => {
         }
         contactSocial.isPublished = true;
         contactSocial.publishedAt = new Date();
-        contactSocial.lastModifiedBy = req.user?.id;
+        contactSocial.lastModifiedBy = req.user?.id; // Type assertion to handle potential undefined
+        contactSocial.updatedAt = new Date();
         await contactSocial.save();
         res
             .status(constants_1.RESPONSE_CODES.SUCCESS)
@@ -545,7 +548,7 @@ const publishContactSocial = async (req, res) => {
         console.error("Error publishing contact social record:", error);
         res
             .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
-            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR, null));
+            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR, null));
     }
 };
 exports.publishContactSocial = publishContactSocial;
@@ -560,7 +563,8 @@ const unpublishContactSocial = async (req, res) => {
                 .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, "Contact social record not found", null));
         }
         contactSocial.isPublished = false;
-        contactSocial.lastModifiedBy = req.user?.id;
+        contactSocial.lastModifiedBy = req.user?.id; // Type assertion to handle potential undefined
+        contactSocial.updatedAt = new Date();
         await contactSocial.save();
         res
             .status(constants_1.RESPONSE_CODES.SUCCESS)
@@ -570,7 +574,7 @@ const unpublishContactSocial = async (req, res) => {
         console.error("Error unpublishing contact social record:", error);
         res
             .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
-            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR, null));
+            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR, null));
     }
 };
 exports.unpublishContactSocial = unpublishContactSocial;

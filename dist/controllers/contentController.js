@@ -415,18 +415,24 @@ const publishContent = async (req, res) => {
         const { id } = req.params;
         const content = await Content_1.default.findById(id);
         if (!content) {
-            return res.status(constants_1.RESPONSE_CODES.NOT_FOUND).json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND, null));
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND, null));
         }
         content.isPublished = true;
         content.publishedAt = new Date();
-        content.lastModifiedBy = req.user?.id;
-        content.lastModifiedAt = new Date();
+        content.lastModifiedBy = req.user?.id; // Type assertion to handle potential undefined
+        content.updatedAt = new Date();
         await content.save();
-        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Content published successfully", content));
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Content published successfully", content));
     }
     catch (error) {
         console.error("Error publishing content:", error);
-        res.status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR).json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null));
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null));
     }
 };
 exports.publishContent = publishContent;
@@ -436,18 +442,24 @@ const unpublishContent = async (req, res) => {
         const { id } = req.params;
         const content = await Content_1.default.findById(id);
         if (!content) {
-            return res.status(constants_1.RESPONSE_CODES.NOT_FOUND).json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND, null));
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND, null));
         }
         content.isPublished = false;
         content.publishedAt = undefined;
-        content.lastModifiedBy = req.user?.id;
-        content.lastModifiedAt = new Date();
+        content.lastModifiedBy = req.user?.id; // Type assertion to handle potential undefined
+        content.updatedAt = new Date();
         await content.save();
-        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Content unpublished successfully", content));
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, "Content unpublished successfully", content));
     }
     catch (error) {
         console.error("Error unpublishing content:", error);
-        res.status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR).json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null));
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_2.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null));
     }
 };
 exports.unpublishContent = unpublishContent;

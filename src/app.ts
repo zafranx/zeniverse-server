@@ -13,7 +13,7 @@ import initiativeRoutes from "./routes/initiativeRoutes";
 import portfolioVentureRoutes from "./routes/ventureRoutes";
 import uploadRoute from "./routes/uploadRoutes";
 import teamMemberRoutes from "./routes/teamMemberRoutes";
-// import contentRoutes from "./routes/contentManagementRoutes";
+// import contentRoutes from "./routes/contentManagementRoutes"; //  old api removed
 import enquiryRoutes from "./routes/contactInquiryRoutes";
 import contactSocialRoutes from "./routes/contactSocialRoutes";
 import newContentRoutes from "./routes/contentRoutes";
@@ -164,7 +164,7 @@ app.use("/api/ventures", portfolioVentureRoutes);
 app.use("/api/media", uploadRoute);
 app.use("/api/team-members", teamMemberRoutes);
 app.use("/api/cloudinary", cloudinaryRoutes);
-// app.use("/api/content-management", contentRoutes);
+// app.use("/api/content-management", contentRoutes); // old api removed
 
 app.use("/api/contact-social", contactSocialRoutes);
 app.use("/api/content", newContentRoutes);
