@@ -14,31 +14,100 @@ import {
 // Get all team members
 export const getAllTeamMembers = async (req: AuthRequest, res: Response) => {
   try {
-    const teamMembers = await TeamMember.find({ isActive: true })
-      .sort({ sort_order: 1, name: 1 })
+    const teamMembers = await TeamMember.find({
+      isActive: true,
+      // featured: true, // if we want to get only featured team members for home page of website -- for founders
+    })
+      .sort({ sort_order: 1, name: 1, featured: -1 })
       .lean();
 
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          RESPONSE_MESSAGES.SUCCESS,
+          teamMembers
+        )
+      );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Get team members error:", error);
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
+  }
+};
+export const getAllTeamMembersNew = async (req: AuthRequest, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    // Build filter query
+    const filterQuery: any = {
+      isActive: true, // Only show active members for public API
+    };
+
+    // Search functionality
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search as string, "i");
+      filterQuery.$or = [
+        { name: searchRegex },
+        { role: searchRegex },
+        { description: searchRegex },
+      ];
+    }
+
+    // Featured filter - if we want to get only featured team members for home page of website -- for founders
+    if (req.query.featured === "true") {
+      filterQuery.featured = true;
+    }
+
+    const [teamMembers, total] = await Promise.all([
+      TeamMember.find(filterQuery)
+        .sort({ sort_order: 1, name: 1, featured: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      TeamMember.countDocuments(filterQuery),
+    ]);
+
     res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(
-        RESPONSE_CODES.SUCCESS,
-        RESPONSE_MESSAGES.SUCCESS,
-        teamMembers
-      )
+      __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.SUCCESS, {
+        teamMembers,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      })
     );
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Get team members error:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(
-        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-        RESPONSE_MESSAGES.INTERNAL_ERROR
-      )
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
   }
 };
 
 // Get all team members (admin)
-export const getAllTeamMembersAdmin = async (req: AuthRequest, res: Response) => {
+export const getAllTeamMembersAdmin = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
@@ -72,19 +141,15 @@ export const getAllTeamMembersAdmin = async (req: AuthRequest, res: Response) =>
     ]);
 
     res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(
-        RESPONSE_CODES.SUCCESS,
-        RESPONSE_MESSAGES.SUCCESS,
-        {
-          teamMembers,
-          pagination: {
-            page,
-            limit,
-            total,
-            pages: Math.ceil(total / limit),
-          },
-        }
-      )
+      __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.SUCCESS, {
+        teamMembers,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      })
     );
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -106,21 +171,25 @@ export const getTeamMemberById = async (req: AuthRequest, res: Response) => {
     const teamMember = await TeamMember.findById(req.params.id).lean();
 
     if (!teamMember) {
-      return res.status(RESPONSE_CODES.NOT_FOUND).json(
-        __requestResponse(
-          RESPONSE_CODES.NOT_FOUND,
-          RESPONSE_MESSAGES.NOT_FOUND
-        )
-      );
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND
+          )
+        );
     }
 
-    res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(
-        RESPONSE_CODES.SUCCESS,
-        RESPONSE_MESSAGES.SUCCESS,
-        teamMember
-      )
-    );
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          RESPONSE_MESSAGES.SUCCESS,
+          teamMember
+        )
+      );
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Get team member by ID error:", error);
@@ -138,8 +207,15 @@ export const getTeamMemberById = async (req: AuthRequest, res: Response) => {
 // Create team member
 export const createTeamMember = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, role, description, sort_order, isActive, imageUrl } =
-      req.body;
+    const {
+      name,
+      role,
+      description,
+      sort_order,
+      isActive,
+      imageUrl,
+      featured,
+    } = req.body;
 
     // Handle image - either from file upload or Cloudinary URL
     let imageToSave = null;
@@ -169,6 +245,7 @@ export const createTeamMember = async (req: AuthRequest, res: Response) => {
       image: imageToSave,
       sort_order: sort_order || 0,
       isActive: isActive !== undefined ? isActive : true,
+      featured: featured !== undefined ? featured : false,
     });
 
     await newTeamMember.save();
@@ -274,18 +351,20 @@ export const updateTeamMember = async (req: AuthRequest, res: Response) => {
 export const deleteTeamMember = async (req: AuthRequest, res: Response) => {
   try {
     const teamMember = await TeamMember.findById(req.params.id);
-    
+
     if (!teamMember) {
-      return res.status(RESPONSE_CODES.NOT_FOUND).json(
-        __requestResponse(
-          RESPONSE_CODES.NOT_FOUND,
-          RESPONSE_MESSAGES.NOT_FOUND
-        )
-      );
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND
+          )
+        );
     }
 
     // Delete image if it's a Cloudinary URL
-    if (teamMember.image && teamMember.image.includes('cloudinary')) {
+    if (teamMember.image && teamMember.image.includes("cloudinary")) {
       const publicId = __extractCloudinaryPublicId(teamMember.image);
       if (publicId) {
         await __deleteCloudinaryFile(publicId);
@@ -297,54 +376,99 @@ export const deleteTeamMember = async (req: AuthRequest, res: Response) => {
 
     await teamMember.deleteOne();
 
-    res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(
-        RESPONSE_CODES.SUCCESS,
-        RESPONSE_MESSAGES.DELETED
-      )
-    );
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.DELETED)
+      );
   } catch (error) {
     console.error("Delete team member error:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(
-        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-        RESPONSE_MESSAGES.INTERNAL_ERROR
-      )
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
   }
 };
 
 // Toggle team member active status
-export const toggleTeamMemberStatus = async (req: AuthRequest, res: Response) => {
+export const toggleTeamMemberStatus = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const teamMember = await TeamMember.findById(req.params.id);
-    
+
     if (!teamMember) {
-      return res.status(RESPONSE_CODES.NOT_FOUND).json(
-        __requestResponse(
-          RESPONSE_CODES.NOT_FOUND,
-          RESPONSE_MESSAGES.NOT_FOUND
-        )
-      );
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND
+          )
+        );
     }
 
     teamMember.isActive = !teamMember.isActive;
     await teamMember.save();
 
     res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(
-        RESPONSE_CODES.SUCCESS,
-        RESPONSE_MESSAGES.UPDATED,
-        { isActive: teamMember.isActive }
-      )
+      __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.UPDATED, {
+        isActive: teamMember.isActive,
+      })
     );
   } catch (error) {
     console.error("Toggle team member status error:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(
-        RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-        RESPONSE_MESSAGES.INTERNAL_ERROR
-      )
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
+  }
+};
+// New: Add toggleFeatured endpoint
+export const toggleTeamMemberFeatured = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const teamMember = await TeamMember.findById(req.params.id);
+
+    if (!teamMember) {
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            RESPONSE_MESSAGES.NOT_FOUND
+          )
+        );
+    }
+
+    teamMember.featured = !teamMember.featured;
+    await teamMember.save();
+
+    res.status(RESPONSE_CODES.SUCCESS).json(
+      __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.UPDATED, {
+        featured: teamMember.featured,
+      })
     );
+  } catch (error) {
+    console.error("Toggle team member featured error:", error);
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          RESPONSE_MESSAGES.INTERNAL_ERROR
+        )
+      );
   }
 };

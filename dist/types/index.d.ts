@@ -76,6 +76,7 @@ export interface TeamMember {
     image: string;
     sort_order?: number;
     isActive?: boolean;
+    featured?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }

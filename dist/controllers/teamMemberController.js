@@ -3,25 +3,81 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toggleTeamMemberStatus = exports.deleteTeamMember = exports.updateTeamMember = exports.createTeamMember = exports.getTeamMemberById = exports.getAllTeamMembersAdmin = exports.getAllTeamMembers = void 0;
+exports.toggleTeamMemberFeatured = exports.toggleTeamMemberStatus = exports.deleteTeamMember = exports.updateTeamMember = exports.createTeamMember = exports.getTeamMemberById = exports.getAllTeamMembersAdmin = exports.getAllTeamMembersNew = exports.getAllTeamMembers = void 0;
 const TeamMember_1 = __importDefault(require("../models/TeamMember"));
 const multer_1 = require("../utils/multer");
 const constants_1 = require("../utils/constants");
 // Get all team members
 const getAllTeamMembers = async (req, res) => {
     try {
-        const teamMembers = await TeamMember_1.default.find({ isActive: true })
-            .sort({ sort_order: 1, name: 1 })
+        const teamMembers = await TeamMember_1.default.find({
+            isActive: true,
+            // featured: true, // if we want to get only featured team members for home page of website -- for founders
+        })
+            .sort({ sort_order: 1, name: 1, featured: -1 })
             .lean();
-        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, teamMembers));
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, teamMembers));
     }
     catch (error) {
         // eslint-disable-next-line no-console
         console.error("Get team members error:", error);
-        res.status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
     }
 };
 exports.getAllTeamMembers = getAllTeamMembers;
+const getAllTeamMembersNew = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        // Build filter query
+        const filterQuery = {
+            isActive: true, // Only show active members for public API
+        };
+        // Search functionality
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, "i");
+            filterQuery.$or = [
+                { name: searchRegex },
+                { role: searchRegex },
+                { description: searchRegex },
+            ];
+        }
+        // Featured filter - if we want to get only featured team members for home page of website -- for founders
+        if (req.query.featured === "true") {
+            filterQuery.featured = true;
+        }
+        const [teamMembers, total] = await Promise.all([
+            TeamMember_1.default.find(filterQuery)
+                .sort({ sort_order: 1, name: 1, featured: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            TeamMember_1.default.countDocuments(filterQuery),
+        ]);
+        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, {
+            teamMembers,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit),
+            },
+        }));
+    }
+    catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Get team members error:", error);
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+    }
+};
+exports.getAllTeamMembersNew = getAllTeamMembersNew;
 // Get all team members (admin)
 const getAllTeamMembersAdmin = async (req, res) => {
     try {
@@ -75,9 +131,13 @@ const getTeamMemberById = async (req, res) => {
     try {
         const teamMember = await TeamMember_1.default.findById(req.params.id).lean();
         if (!teamMember) {
-            return res.status(constants_1.RESPONSE_CODES.NOT_FOUND).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
         }
-        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, teamMember));
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.SUCCESS, teamMember));
     }
     catch (error) {
         // eslint-disable-next-line no-console
@@ -91,7 +151,7 @@ exports.getTeamMemberById = getTeamMemberById;
 // Create team member
 const createTeamMember = async (req, res) => {
     try {
-        const { name, role, description, sort_order, isActive, imageUrl } = req.body;
+        const { name, role, description, sort_order, isActive, imageUrl, featured, } = req.body;
         // Handle image - either from file upload or Cloudinary URL
         let imageToSave = null;
         // Check for Cloudinary URL first (since you always use Cloudinary)
@@ -116,6 +176,7 @@ const createTeamMember = async (req, res) => {
             image: imageToSave,
             sort_order: sort_order || 0,
             isActive: isActive !== undefined ? isActive : true,
+            featured: featured !== undefined ? featured : false,
         });
         await newTeamMember.save();
         res
@@ -186,10 +247,12 @@ const deleteTeamMember = async (req, res) => {
     try {
         const teamMember = await TeamMember_1.default.findById(req.params.id);
         if (!teamMember) {
-            return res.status(constants_1.RESPONSE_CODES.NOT_FOUND).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
         }
         // Delete image if it's a Cloudinary URL
-        if (teamMember.image && teamMember.image.includes('cloudinary')) {
+        if (teamMember.image && teamMember.image.includes("cloudinary")) {
             const publicId = (0, constants_1.__extractCloudinaryPublicId)(teamMember.image);
             if (publicId) {
                 await (0, constants_1.__deleteCloudinaryFile)(publicId);
@@ -200,11 +263,15 @@ const deleteTeamMember = async (req, res) => {
             await (0, constants_1.__deleteFile)(teamMember.image);
         }
         await teamMember.deleteOne();
-        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.DELETED));
+        res
+            .status(constants_1.RESPONSE_CODES.SUCCESS)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.DELETED));
     }
     catch (error) {
         console.error("Delete team member error:", error);
-        res.status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
     }
 };
 exports.deleteTeamMember = deleteTeamMember;
@@ -213,16 +280,45 @@ const toggleTeamMemberStatus = async (req, res) => {
     try {
         const teamMember = await TeamMember_1.default.findById(req.params.id);
         if (!teamMember) {
-            return res.status(constants_1.RESPONSE_CODES.NOT_FOUND).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
         }
         teamMember.isActive = !teamMember.isActive;
         await teamMember.save();
-        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.UPDATED, { isActive: teamMember.isActive }));
+        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.UPDATED, {
+            isActive: teamMember.isActive,
+        }));
     }
     catch (error) {
         console.error("Toggle team member status error:", error);
-        res.status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
     }
 };
 exports.toggleTeamMemberStatus = toggleTeamMemberStatus;
+// New: Add toggleFeatured endpoint
+const toggleTeamMemberFeatured = async (req, res) => {
+    try {
+        const teamMember = await TeamMember_1.default.findById(req.params.id);
+        if (!teamMember) {
+            return res
+                .status(constants_1.RESPONSE_CODES.NOT_FOUND)
+                .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.NOT_FOUND, constants_1.RESPONSE_MESSAGES.NOT_FOUND));
+        }
+        teamMember.featured = !teamMember.featured;
+        await teamMember.save();
+        res.status(constants_1.RESPONSE_CODES.SUCCESS).json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.SUCCESS, constants_1.RESPONSE_MESSAGES.UPDATED, {
+            featured: teamMember.featured,
+        }));
+    }
+    catch (error) {
+        console.error("Toggle team member featured error:", error);
+        res
+            .status(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+            .json((0, constants_1.__requestResponse)(constants_1.RESPONSE_CODES.INTERNAL_SERVER_ERROR, constants_1.RESPONSE_MESSAGES.INTERNAL_ERROR));
+    }
+};
+exports.toggleTeamMemberFeatured = toggleTeamMemberFeatured;
 //# sourceMappingURL=teamMemberController.js.map

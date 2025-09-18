@@ -6,11 +6,12 @@ import {
   createTeamMember,
   updateTeamMember,
   deleteTeamMember,
-  toggleTeamMemberStatus
+  toggleTeamMemberStatus,
+  toggleTeamMemberFeatured,
 } from "../controllers/teamMemberController";
 import {
   authenticateToken,
-  requireAdminOrSuperAdmin
+  requireAdminOrSuperAdmin,
 } from "../middleware/auth";
 import { __uploadImage } from "../utils/multer";
 
@@ -56,6 +57,13 @@ router.patch(
   authenticateToken,
   requireAdminOrSuperAdmin,
   toggleTeamMemberStatus
+);
+// New: Add toggleFeatured endpoint
+router.patch(
+  "/:id/toggle-featured",
+  authenticateToken,
+  requireAdminOrSuperAdmin,
+  toggleTeamMemberFeatured
 );
 
 export default router;

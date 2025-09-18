@@ -39,19 +39,19 @@ const teamMemberSchema = new mongoose_1.Schema({
         type: String,
         //   required: true,
         trim: true,
-        maxlength: 100
+        maxlength: 100,
     },
     role: {
         type: String,
         //   required: true,
         trim: true,
-        maxlength: 100
+        maxlength: 100,
     },
     description: {
         type: String,
         //   required: true,
         trim: true,
-        maxlength: 500
+        maxlength: 500,
     },
     image: {
         type: String,
@@ -59,14 +59,18 @@ const teamMemberSchema = new mongoose_1.Schema({
     },
     sort_order: {
         type: Number,
-        default: 0
+        default: 0,
     },
     isActive: {
         type: Boolean,
-        default: true
-    }
+        default: true,
+    },
+    featured: {
+        type: Boolean,
+        default: false,
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 // Indexes for better performance
 teamMemberSchema.index({ name: "text", role: "text" });

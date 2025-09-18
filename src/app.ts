@@ -245,6 +245,14 @@ app.get("/api/docs", (req, res) => {
           upload: "POST /api/*/upload",
           delete: "DELETE /api/media/:id",
         },
+        contactSocial: {
+          list: "GET /api/contact-social",
+          create: "POST /api/contact-social",
+          get: "GET /api/contact-social/:id",
+          update: "PUT /api/contact-social/:id",
+          delete: "DELETE /api/contact-social/:id",
+          toggleStatus: "PATCH /api/contact-social/:id/toggle-status",
+        },
       },
     })
   );

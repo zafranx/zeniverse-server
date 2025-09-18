@@ -14,5 +14,7 @@ router.post("/", auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin, mult
 router.put("/:id", auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin, multer_1.__uploadImage, teamMemberController_1.updateTeamMember);
 router.delete("/:id", auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin, teamMemberController_1.deleteTeamMember);
 router.patch("/:id/toggle-status", auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin, teamMemberController_1.toggleTeamMemberStatus);
+// New: Add toggleFeatured endpoint
+router.patch("/:id/toggle-featured", auth_1.authenticateToken, auth_1.requireAdminOrSuperAdmin, teamMemberController_1.toggleTeamMemberFeatured);
 exports.default = router;
 //# sourceMappingURL=teamMemberRoutes.js.map
