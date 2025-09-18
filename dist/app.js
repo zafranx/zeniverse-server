@@ -108,7 +108,7 @@ const createLimiter = (windowMs, max, message) => (0, express_rate_limit_1.defau
 //   "/api/admin/login",
 //   createLimiter(15 * 60 * 1000, 5, "Too many login attempts")
 // );
-// File upload rate limiting
+// ** File upload rate limiting
 app.use("/api/*/upload", createLimiter(60 * 1000, 10, "Too many file uploads"));
 // app.use("/api/cloudinary", cloudinaryRoutes);
 // Body parsing middleware
@@ -123,6 +123,22 @@ app.use(express_1.default.json({
         }
     },
 }));
+// app.use(
+//   express.json({
+//     limit: "20mb",
+//     verify: (req, res, buf, encoding) => {
+//       // Only verify JSON for requests that should have JSON bodies
+//       if (req.method === "GET" || req.method === "DELETE") {
+//         return; // Skip JSON verification for GET and DELETE requests
+//       }
+//       try {
+//         JSON.parse(buf.toString());
+//       } catch (e) {
+//         throw new Error("Invalid JSON");
+//       }
+//     },
+//   })
+// );
 app.use(express_1.default.urlencoded({
     extended: true,
     limit: "20mb",

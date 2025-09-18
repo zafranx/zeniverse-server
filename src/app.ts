@@ -121,7 +121,7 @@ const createLimiter = (windowMs: number, max: number, message: string) =>
 //   createLimiter(15 * 60 * 1000, 5, "Too many login attempts")
 // );
 
-// File upload rate limiting
+// ** File upload rate limiting
 app.use("/api/*/upload", createLimiter(60 * 1000, 10, "Too many file uploads"));
 // app.use("/api/cloudinary", cloudinaryRoutes);
 // Body parsing middleware
@@ -137,6 +137,24 @@ app.use(
     },
   })
 );
+// app.use(
+//   express.json({
+//     limit: "20mb",
+//     verify: (req, res, buf, encoding) => {
+//       // Only verify JSON for requests that should have JSON bodies
+//       if (req.method === "GET" || req.method === "DELETE") {
+//         return; // Skip JSON verification for GET and DELETE requests
+//       }
+
+//       try {
+//         JSON.parse(buf.toString());
+//       } catch (e) {
+//         throw new Error("Invalid JSON");
+//       }
+//     },
+//   })
+// );
+
 
 app.use(
   express.urlencoded({
@@ -227,6 +245,7 @@ app.get("/api/docs", (req, res) => {
           delete: "DELETE /api/team-members/:id",
           toggleStatus: "PATCH /api/team-members/:id/toggle-status",
         },
+
         content: {
           list: "GET /api/content-management",
           create: "POST /api/content-management",
@@ -234,6 +253,7 @@ app.get("/api/docs", (req, res) => {
           update: "PUT /api/content-management/:id",
           delete: "DELETE /api/content-management/:id",
         },
+
         enquiry: {
           list: "GET /api/contact-inquiries",
           create: "POST /api/contact-inquiries",

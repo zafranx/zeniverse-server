@@ -7,26 +7,29 @@ import { RESPONSE_CODES, RESPONSE_MESSAGES } from "../utils/constants";
 import { __requestResponse } from "../utils/constants";
 
 // Helper function to generate unique slug
-const generateUniqueSlug = async (title: string, excludeId?: string): Promise<string> => {
+const generateUniqueSlug = async (
+  title: string,
+  excludeId?: string
+): Promise<string> => {
   let baseSlug = title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-  
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
   let slug = baseSlug;
   let counter = 1;
-  
+
   while (true) {
     const query: any = { slug };
     if (excludeId) {
       query._id = { $ne: excludeId };
     }
-    
+
     const existing = await Content.findOne(query);
     if (!existing) {
       return slug;
     }
-    
+
     slug = `${baseSlug}-${counter}`;
     counter++;
   }
@@ -184,7 +187,9 @@ export const getContentByType = async (req: AuthRequest, res: Response) => {
         .json(
           __requestResponse(
             RESPONSE_CODES.NOT_FOUND,
-            `No ${published === "true" ? "published " : ""}content found for type: ${type}`
+            `No ${
+              published === "true" ? "published " : ""
+            }content found for type: ${type}`
           )
         );
     }
@@ -233,7 +238,9 @@ export const getContentBySlug = async (req: AuthRequest, res: Response) => {
         .json(
           __requestResponse(
             RESPONSE_CODES.NOT_FOUND,
-            `No ${published === "true" ? "published " : ""}content found for slug: ${slug}`
+            `No ${
+              published === "true" ? "published " : ""
+            }content found for slug: ${slug}`
           )
         );
     }
@@ -402,11 +409,10 @@ export const updateContent = async (req: AuthRequest, res: Response) => {
       updateData.slug = await generateUniqueSlug(updateData.title, id);
     }
 
-    const updatedContent = await Content.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    )
+    const updatedContent = await Content.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
       .populate("createdBy", "username email")
       .populate("lastModifiedBy", "username email");
 
@@ -544,11 +550,10 @@ export const toggleContentStatus = async (req: AuthRequest, res: Response) => {
       updateData.publishedAt = new Date();
     }
 
-    const updatedContent = await Content.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    )
+    const updatedContent = await Content.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
       .populate("createdBy", "username email")
       .populate("lastModifiedBy", "username email");
 
@@ -592,16 +597,11 @@ export const getSEOSettings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const content = await Content.findById(id).select('seo');
+    const content = await Content.findById(id).select("seo");
     if (!content) {
       return res
         .status(RESPONSE_CODES.NOT_FOUND)
-        .json(
-          __requestResponse(
-            RESPONSE_CODES.NOT_FOUND,
-            "Content not found"
-          )
-        );
+        .json(__requestResponse(RESPONSE_CODES.NOT_FOUND, "Content not found"));
     }
 
     res
@@ -640,7 +640,7 @@ export const updateSEOSettings = async (req: AuthRequest, res: Response) => {
         updatedAt: new Date(),
       },
       { new: true, runValidators: true }
-    ).select('seo');
+    ).select("seo");
 
     if (!updatedContent) {
       return res
@@ -771,10 +771,94 @@ export const unpublishContent = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get published content by type (Public)
-export const getPublishedContentByType = async (req: AuthRequest, res: Response) => {
+// Get published content by type (Public) - Single document only
+export const getPublishedContentByType = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
-    const { type } = req.params;
+    // Get type from URL parameter or query parameter
+    const type = req.params.type || (req.query.type as string);
+
+    if (!type) {
+      return res
+        .status(RESPONSE_CODES.BAD_REQUEST)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.BAD_REQUEST,
+            "Content type is required"
+          )
+        );
+    }
+
+    // Build query for published content only
+    const query: any = {
+      type,
+      isPublished: true,
+    };
+
+    // Find only one published document for the type
+    const content = await Content.findOne(query)
+      .select("-createdBy -lastModifiedBy") // Hide admin fields for public
+      .sort({ publishedAt: -1 }) // Get the most recently published one
+      .lean();
+
+    if (!content) {
+      return res
+        .status(RESPONSE_CODES.NOT_FOUND)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.NOT_FOUND,
+            `No published content found for type: ${type}`,
+            null
+          )
+        );
+    }
+
+    // Return single content object directly
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          RESPONSE_MESSAGES.SUCCESS,
+          content
+        )
+      );
+  } catch (error: any) {
+    console.error("Error fetching published content by type:", error);
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          error.message,
+          null
+        )
+      );
+  }
+};
+
+// Get published content by type (Public)
+export const getPublishedContentByTypexxx_old = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    // Get type from URL parameter or query parameter
+    const type = req.params.type || (req.query.type as string);
+
+    if (!type) {
+      return res
+        .status(RESPONSE_CODES.BAD_REQUEST)
+        .json(
+          __requestResponse(
+            RESPONSE_CODES.BAD_REQUEST,
+            "Content type is required"
+          )
+        );
+    }
+
     const {
       page = 1,
       limit = 10,
@@ -829,13 +913,26 @@ export const getPublishedContentByType = async (req: AuthRequest, res: Response)
       },
     };
 
-    res.status(RESPONSE_CODES.SUCCESS).json(
-      __requestResponse(RESPONSE_CODES.SUCCESS, RESPONSE_MESSAGES.SUCCESS, responseData)
-    );
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.SUCCESS,
+          RESPONSE_MESSAGES.SUCCESS,
+          responseData
+        )
+      );
   } catch (error: any) {
     console.error("Error fetching published content by type:", error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json(
-      __requestResponse(RESPONSE_CODES.INTERNAL_SERVER_ERROR, error.message, null)
-    );
+    res
+      .status(RESPONSE_CODES.INTERNAL_SERVER_ERROR)
+      .json(
+        __requestResponse(
+          RESPONSE_CODES.INTERNAL_SERVER_ERROR,
+          error.message,
+          null
+        )
+      );
   }
 };
+

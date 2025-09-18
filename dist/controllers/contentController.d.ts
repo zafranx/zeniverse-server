@@ -12,5 +12,6 @@ export declare const getSEOSettings: (req: AuthRequest, res: Response) => Promis
 export declare const updateSEOSettings: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 export declare const publishContent: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 export declare const unpublishContent: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
-export declare const getPublishedContentByType: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getPublishedContentByType: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const getPublishedContentByTypexxx_old: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 //# sourceMappingURL=contentController.d.ts.map
